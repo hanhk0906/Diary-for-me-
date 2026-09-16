@@ -2,7 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<!-- 아이폰(사파리) 홈 화면 앱 설정: manifest 만으로는 부족해 별도 태그가 필요하다 -->
+<link rel="apple-touch-icon" href="./icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="업무관리">
+
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#5D4037">
+<link rel="icon" href="./icon-192.png" sizes="192x192" type="image/png">
+
 <title>나의 다이어리</title>
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
@@ -50,6 +61,17 @@ body {
   line-height: 1.7;
   min-height: 100vh;
   padding: 30px 20px;
+  /* 아이폰 노치/홈 인디케이터 영역만큼 여백을 더한다 (지원하지 않는 브라우저는 0px) */
+  padding-top: calc(30px + env(safe-area-inset-top, 0px));
+  padding-right: calc(20px + env(safe-area-inset-right, 0px));
+  padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px));
+  padding-left: calc(20px + env(safe-area-inset-left, 0px));
+  overflow-x: hidden;
+}
+
+/* 입력란 글자가 16px 보다 작으면 아이폰 사파리가 입력할 때 화면을 확대해버린다 */
+input, textarea, select, button {
+  font-size: max(1rem, 16px);
 }
 
 /* 포커스 스타일 */
@@ -70,6 +92,44 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* 상단 건너뛰기 링크 - 평소엔 화면에서 숨지만 스크린리더 순차 탐색과 탭 이동에는 잡힌다 */
+.skip-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 200;
+}
+
+.skip-link {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  color: var(--btn-text);
+  background: var(--primary);
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 16px;
+  clip: auto;
+  overflow: visible;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0 0 8px 0;
 }
 
 /* 라이브 알림 영역 */
@@ -361,6 +421,8 @@ body {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .todo-input {
@@ -773,9 +835,284 @@ body {
   font-style: italic;
   padding: 12px;
 }
+
+/* 마감일 입력 라벨 */
+.input-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.todo-due-input {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+/* 마감 표시 */
+.todo-due {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-light);
+  background: rgba(141, 110, 99, 0.12);
+  padding: 2px 10px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.todo-due.due-today {
+  background: rgba(198, 40, 40, 0.12);
+  color: var(--danger);
+}
+
+.todo-due.due-overdue {
+  background: var(--danger);
+  color: #FFFFFF;
+}
+
+/* 챙길 것 섹션 */
+#attention-section-title::before {
+  content: '\2757  ';
+}
+
+.attention-summary {
+  font-weight: 700;
+  color: var(--text-medium);
+  margin-bottom: 10px;
+}
+
+.attention-item {
+  flex-wrap: wrap;
+}
+
+.attention-origin {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-small {
+  font-size: 0.9rem;
+  padding: 6px 12px;
+}
+
+/* 검색 섹션 */
+#search-section-title::before {
+  content: '\1F50D  ';
+}
+
+.search-item {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.search-meta {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.search-body {
+  color: var(--text-dark);
+  word-break: break-word;
+  white-space: pre-wrap;
+  margin-bottom: 6px;
+}
+
+/* 저장 위치 섹션 */
+#sync-section-title::before {
+  content: '\1F4BE  ';
+}
+
+.sync-status {
+  font-weight: 700;
+  color: var(--text-medium);
+  margin-bottom: 8px;
+}
+
+.sync-note {
+  color: var(--text-light);
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+/* 경고 문구: 색이 아니라 글자로 알리되, 보이는 사람에게도 눈에 띄게 */
+.sync-warning {
+  color: var(--danger);
+  font-weight: 700;
+  background: rgba(198, 40, 40, 0.08);
+  border: 2px solid rgba(198, 40, 40, 0.35);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.sync-btns {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.conflict-detail {
+  margin: 0 0 20px 20px;
+  padding: 0;
+  color: var(--text-medium);
+  line-height: 1.9;
+}
+
+.modal-text {
+  color: var(--text-dark);
+  margin-bottom: 14px;
+  line-height: 1.7;
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+/* 모달: 폰 화면에서 잘리지 않도록 */
+.modal-overlay {
+  padding: 16px;
+  padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.modal {
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+/* ===== 폰 화면 (가로 600px 이하) =====
+   가로 스크롤이 생기지 않도록 여백을 줄이고 입력줄을 세로로 쌓는다. */
+@media (max-width: 600px) {
+  body {
+    padding: 12px 10px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-right: calc(10px + env(safe-area-inset-right, 0px));
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    padding-left: calc(10px + env(safe-area-inset-left, 0px));
+  }
+
+  .diary-content {
+    padding: 0 14px 24px 24px;
+  }
+
+  .diary-header {
+    padding: 18px 14px 18px 24px;
+  }
+
+  .diary-container::before {
+    width: 16px;
+  }
+
+  .diary-container::after {
+    right: 18px;
+    width: 20px;
+    height: 50px;
+  }
+
+  .diary-title {
+    font-size: 1.5rem;
+  }
+
+  .date-display {
+    font-size: 1.2rem;
+    min-width: 0;
+    width: 100%;
+    margin-right: 0;
+  }
+
+  .date-nav {
+    gap: 6px;
+  }
+
+  .btn-export {
+    margin-left: 0;
+  }
+
+  /* 입력 줄: 폰에서는 세로로 쌓는다 */
+  .todo-input-area {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .todo-input,
+  .todo-due-input,
+  .date-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .todo-input-area .btn {
+    width: 100%;
+  }
+
+  .todo-item,
+  .event-item {
+    flex-wrap: wrap;
+  }
+
+  .todo-text,
+  .event-title {
+    min-width: 0;
+    flex: 1 1 60%;
+  }
+
+  .event-time {
+    min-width: 0;
+  }
+
+  .goal-section {
+    margin-left: 0;
+    margin-right: 0;
+    padding: 20px 14px 16px !important;
+  }
+
+  .modal {
+    width: 100%;
+    padding: 20px 16px;
+  }
+
+  .modal-btns {
+    flex-direction: column;
+  }
+
+  .modal-btns .btn {
+    width: 100%;
+  }
+
+  .sync-btns .btn {
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- 상단 건너뛰기 링크 (스크린리더 순차 탐색 / 탭 이동의 첫 항목) -->
+<nav class="skip-links" aria-label="섹션 바로가기">
+  <a class="skip-link" href="#attention-section-title">챙길 것으로 건너뛰기</a>
+  <a class="skip-link" href="#todo-section-title">할 일로 건너뛰기</a>
+  <a class="skip-link" href="#memo-section-title">메모로 건너뛰기</a>
+  <a class="skip-link" href="#event-section-title">일정으로 건너뛰기</a>
+  <a class="skip-link" href="#weekly-goal-title">이번 주 목표로 건너뛰기</a>
+  <a class="skip-link" href="#monthly-goal-title">이번 달 목표로 건너뛰기</a>
+  <a class="skip-link" href="#completed-section-title">해낸 일로 건너뛰기</a>
+  <a class="skip-link" href="#search-section-title">검색으로 건너뛰기</a>
+  <a class="skip-link" href="#sync-section-title">저장 위치로 건너뛰기</a>
+</nav>
 
 <!-- 스크린리더 라이브 알림 영역 -->
 <div id="live-status" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -799,13 +1136,22 @@ body {
 
   <div class="diary-content">
 
+    <!-- 챙길 것 섹션 (모든 날짜의 기한 지남 / 오늘 마감) -->
+    <section class="section" aria-labelledby="attention-section-title">
+      <h2 class="section-title" id="attention-section-title" tabindex="-1">챙길 것</h2>
+      <p class="attention-summary" id="attention-summary"></p>
+      <ul class="todo-list" id="attention-list" role="list" aria-label="챙길 것 목록"></ul>
+    </section>
+
     <!-- 투두리스트 섹션 -->
     <section class="section" aria-labelledby="todo-section-title">
-      <h2 class="section-title" id="todo-section-title">할 일</h2>
+      <h2 class="section-title" id="todo-section-title" tabindex="-1">할 일</h2>
 
       <div class="todo-input-area" role="group" aria-label="새 할 일 입력">
         <label for="todo-input" class="sr-only">새 할 일</label>
         <input type="text" id="todo-input" class="todo-input" placeholder="할 일을 입력하세요..." aria-label="새 할 일 입력" accesskey="t">
+        <label for="todo-due-input" class="input-label">마감일 (선택)</label>
+        <input type="date" id="todo-due-input" class="todo-input todo-due-input">
         <button class="btn btn-primary" id="btn-add-todo" aria-label="할 일 추가">추가</button>
       </div>
 
@@ -821,7 +1167,7 @@ body {
 
     <!-- 메모 섹션 -->
     <section class="section" aria-labelledby="memo-section-title">
-      <h2 class="section-title" id="memo-section-title">메모</h2>
+      <h2 class="section-title" id="memo-section-title" tabindex="-1">메모</h2>
       <textarea id="memo-textarea" class="memo-textarea"
                 placeholder="메모를 자유롭게 작성하세요..."
                 aria-label="메모 입력. 내용은 자동 저장됩니다."
@@ -832,7 +1178,7 @@ body {
 
     <!-- 일정 섹션 -->
     <section class="section" aria-labelledby="event-section-title">
-      <h2 class="section-title" id="event-section-title">일정</h2>
+      <h2 class="section-title" id="event-section-title" tabindex="-1">일정</h2>
       <div id="event-list" role="list" aria-label="일정 목록"></div>
 
       <div class="event-import-area">
@@ -848,7 +1194,7 @@ body {
 
     <!-- 이번 주 목표 섹션 -->
     <section class="section goal-section" aria-labelledby="weekly-goal-title">
-      <h2 class="section-title" id="weekly-goal-title">이번 주 목표</h2>
+      <h2 class="section-title" id="weekly-goal-title" tabindex="-1">이번 주 목표</h2>
       <p class="goal-period" id="weekly-period"></p>
       <textarea id="weekly-goal-textarea" class="goal-textarea"
                 placeholder="이번 주 목표를 작성하세요..."
@@ -859,7 +1205,7 @@ body {
 
     <!-- 이번 달 목표 섹션 -->
     <section class="section goal-section" aria-labelledby="monthly-goal-title">
-      <h2 class="section-title" id="monthly-goal-title">이번 달 목표</h2>
+      <h2 class="section-title" id="monthly-goal-title" tabindex="-1">이번 달 목표</h2>
       <p class="goal-period" id="monthly-period"></p>
       <textarea id="monthly-goal-textarea" class="goal-textarea"
                 placeholder="이번 달 목표를 작성하세요..."
@@ -870,13 +1216,49 @@ body {
 
     <!-- 해낸 일 섹션 -->
     <section class="section" aria-labelledby="completed-section-title">
-      <h2 class="section-title" id="completed-section-title">해낸 일</h2>
+      <h2 class="section-title" id="completed-section-title" tabindex="-1">해낸 일</h2>
       <div role="region" aria-labelledby="completed-title">
         <h3 class="sub-section-title" id="completed-title">
           해낸 일 <span class="count" id="completed-count" aria-label="완료 개수">0</span>
         </h3>
         <ul class="todo-list" id="completed-list" role="list" aria-label="해낸 일 목록"></ul>
       </div>
+    </section>
+
+    <!-- 검색 섹션 -->
+    <section class="section" aria-labelledby="search-section-title">
+      <h2 class="section-title" id="search-section-title" tabindex="-1">검색</h2>
+
+      <div class="todo-input-area" role="group" aria-label="전체 검색">
+        <label for="search-input" class="input-label">검색어</label>
+        <input type="text" id="search-input" class="todo-input" placeholder="모든 날짜에서 찾을 단어...">
+        <button class="btn btn-primary" id="btn-search">검색</button>
+      </div>
+
+      <h3 class="sub-section-title" id="search-results-title" tabindex="-1">검색 결과</h3>
+      <ul class="todo-list" id="search-results" role="list" aria-label="검색 결과 목록"></ul>
+    </section>
+
+    <!-- 저장 위치 섹션 (구글 드라이브 동기화) -->
+    <section class="section" id="sync-section" aria-labelledby="sync-section-title">
+      <h2 class="section-title" id="sync-section-title" tabindex="-1">저장 위치</h2>
+
+      <p class="sync-status" id="sync-status">저장 위치를 확인하는 중입니다.</p>
+      <p class="sync-warning" id="sync-warning" hidden></p>
+      <p class="sync-note" id="sync-device-note"></p>
+
+      <div class="sync-btns">
+        <button class="btn btn-google" id="btn-drive-connect">구글 드라이브에 연결</button>
+        <button class="btn btn-google" id="btn-drive-reconnect" hidden>구글 다시 연결</button>
+        <button class="btn btn-primary" id="btn-drive-sync" hidden>지금 동기화</button>
+        <button class="btn btn-accent" id="btn-device-name">기기 이름 바꾸기</button>
+        <button class="btn btn-danger" id="btn-drive-disconnect" hidden>구글 드라이브 연결 끊기</button>
+      </div>
+
+      <p class="sync-note">
+        구글 드라이브에는 이 앱이 만든 파일 <strong>업무관리-기록.json</strong> 하나만 저장합니다.
+        이 앱이 만든 파일 외에는 접근하지 않습니다.
+      </p>
     </section>
 
     <!-- 단축키 안내 -->
@@ -887,7 +1269,10 @@ body {
         <li><kbd>Alt + D</kbd> : 날짜 선택기로 이동</li>
         <li><kbd>Alt + E</kbd> : 엑셀 내보내기</li>
         <li><kbd>Alt + M</kbd> : 메모란으로 이동</li>
+        <li><kbd>Alt + F</kbd> : 검색란으로 이동</li>
+        <li><kbd>Alt + K</kbd> : 챙길 것 섹션으로 이동</li>
         <li><kbd>Enter</kbd> : 입력란에서 할 일 추가</li>
+        <li><kbd>Enter</kbd> : 검색란에서 검색 실행</li>
       </ul>
     </details>
   </div>
@@ -923,6 +1308,41 @@ body {
   </div>
 </div>
 
+<!-- 동기화 충돌 안내 모달 (자동 병합하지 않고 사용자에게 묻는다) -->
+<div class="modal-overlay" id="conflict-modal" role="dialog" aria-modal="true"
+     aria-labelledby="conflict-title" aria-describedby="conflict-desc">
+  <div class="modal">
+    <h2 class="modal-title" id="conflict-title">기록이 서로 다릅니다</h2>
+    <p class="modal-text" id="conflict-desc"></p>
+    <ul class="conflict-detail" id="conflict-detail" role="list"></ul>
+    <div class="modal-btns">
+      <button class="btn btn-primary" id="btn-conflict-local">이 기기 것으로 덮어쓰기</button>
+      <button class="btn btn-accent" id="btn-conflict-remote">다른 기기 것 가져오기</button>
+      <button class="btn btn-accent" id="btn-conflict-later">나중에</button>
+    </div>
+  </div>
+</div>
+
+<!-- 기기 이름 모달 -->
+<div class="modal-overlay" id="device-modal" role="dialog" aria-modal="true"
+     aria-labelledby="device-title" aria-describedby="device-desc">
+  <div class="modal">
+    <h2 class="modal-title" id="device-title">기기 이름 바꾸기</h2>
+    <p class="modal-text" id="device-desc">
+      이 기기를 부를 이름입니다. 다른 기기에서 저장한 기록과 내용이 다를 때 안내 문구에 쓰입니다.
+      예를 들어 사무실 PC, 집 PC, 아이폰처럼 적어주세요.
+    </p>
+    <div class="modal-field">
+      <label for="device-name-input" class="input-label">기기 이름</label>
+      <input type="text" id="device-name-input" class="todo-input" maxlength="20" autocomplete="off">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-accent" id="btn-device-cancel">취소</button>
+      <button class="btn btn-primary" id="btn-device-save">저장</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
   'use strict';
@@ -943,10 +1363,32 @@ body {
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
   }
 
+  // 알림은 차례로 읽어준다.
+  // 연달아 부르면 앞 문장이 덮여서 사라지므로(특히 저장 실패 안내) 줄을 세운다.
+  const ANNOUNCE_GAP_MS = 800;
+  const ANNOUNCE_QUEUE_MAX = 5;
+  let announceQueue = [];
+  let announceTimer = null;
+
   function announce(msg) {
+    if (!msg) return;
+    announceQueue.push(String(msg));
+    if (announceQueue.length > ANNOUNCE_QUEUE_MAX) announceQueue.shift();
+    if (announceTimer === null) pumpAnnounce();
+  }
+
+  function pumpAnnounce() {
     const el = $('#live-status');
+    if (!el) { announceQueue = []; announceTimer = null; return; }
+    const msg = announceQueue.shift();
+    if (msg === undefined) { announceTimer = null; return; }
+    // 같은 문장을 다시 읽어주게 하려면 한 번 비웠다가 넣어야 한다.
+    // requestAnimationFrame 은 화면이 숨겨지면 멈추므로 타이머를 쓴다.
     el.textContent = '';
-    requestAnimationFrame(() => { el.textContent = msg; });
+    announceTimer = setTimeout(() => {
+      el.textContent = msg;
+      announceTimer = setTimeout(pumpAnnounce, ANNOUNCE_GAP_MS);
+    }, 60);
   }
 
   function genId() {
@@ -961,6 +1403,1032 @@ body {
     };
   }
 
+  // ===== 로컬 기준 ISO 문자열 (UTC 시프트 방지) =====
+  function localIsoNow() {
+    const p = (n) => String(n).padStart(2, '0');
+    const d = new Date();
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? '+' : '-';
+    const ah = Math.floor(Math.abs(off) / 60);
+    const am = Math.abs(off) % 60;
+    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${sign}${p(ah)}:${p(am)}`;
+  }
+
+  // "오후 5시 30분" / "어제 오후 5시" / "9월 15일 오후 5시"
+  function formatWhenKR(date) {
+    if (!date || isNaN(date.getTime())) return '';
+    const h = date.getHours();
+    const m = date.getMinutes();
+    const ampm = h < 12 ? '오전' : '오후';
+    let h12 = h % 12;
+    if (h12 === 0) h12 = 12;
+    const clock = `${ampm} ${h12}시${m ? ' ' + m + '분' : ''}`;
+
+    const ds = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+    const today = todayStr();
+    if (ds === today) return clock;
+    const diff = dayDiff(ds, today);
+    if (diff === 1) return '어제 ' + clock;
+    return `${date.getMonth() + 1}월 ${date.getDate()}일 ${clock}`;
+  }
+
+  // "5분 전" 처럼 얼마나 지났는지
+  function formatAgoKR(date) {
+    if (!date || isNaN(date.getTime())) return '';
+    const diff = Date.now() - date.getTime();
+    if (diff < 60000) return '조금 전';
+    const min = Math.floor(diff / 60000);
+    if (min < 60) return `${min}분 전`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}시간 전`;
+    return `${Math.floor(hr / 24)}일 전`;
+  }
+
+  // ===== 동기화 대상 키 =====
+  function isSyncKey(key) {
+    // diary_settings(마지막 본 날짜, 기기 이름, 드라이브 설정)는 기기별 설정이므로 동기화하지 않는다
+    return !!key && key.indexOf('diary_') === 0 && key !== 'diary_settings';
+  }
+
+  function isJsonKey(key) {
+    return key.indexOf('diary_todos_') === 0 || key.indexOf('diary_events_') === 0;
+  }
+
+  // 현재 브라우저에 있는 모든 다이어리 데이터를 사람이 읽을 수 있는 형태로 수집
+  function collectSyncData() {
+    const data = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!isSyncKey(key)) continue;
+      const raw = localStorage.getItem(key);
+      if (raw === null) continue;
+      if (isJsonKey(key)) {
+        try { data[key] = JSON.parse(raw); }
+        catch { data[key] = raw; }
+      } else {
+        data[key] = raw;
+      }
+    }
+    return data;
+  }
+
+  function syncValueToRaw(key, val) {
+    return typeof val === 'string' ? val : JSON.stringify(val);
+  }
+
+  // 키 하나를 사람이 알아들을 이름으로 (충돌 안내에 쓴다)
+  function syncKeyLabel(key) {
+    let m = key.match(/^diary_todos_(\d{4}-\d{2}-\d{2})$/);
+    if (m) return formatDateKR(m[1]) + ' 할 일';
+    m = key.match(/^diary_memo_(\d{4}-\d{2}-\d{2})$/);
+    if (m) return formatDateKR(m[1]) + ' 메모';
+    m = key.match(/^diary_events_(\d{4}-\d{2}-\d{2})$/);
+    if (m) return formatDateKR(m[1]) + ' 일정';
+    m = key.match(/^diary_weekly_(\d{4})-W(\d{1,2})$/);
+    if (m) return `${m[1]}년 ${parseInt(m[2], 10)}번째 주 목표`;
+    m = key.match(/^diary_monthly_(\d{4})-(\d{2})$/);
+    if (m) return `${m[1]}년 ${parseInt(m[2], 10)}월 목표`;
+    return key;
+  }
+
+  // ===== 기기별 설정 (동기화하지 않는 diary_settings 안에 둔다) =====
+  function patchSettings(patch) {
+    try {
+      const s = getSettings();
+      for (const k in patch) {
+        if (Object.prototype.hasOwnProperty.call(patch, k)) s[k] = patch[k];
+      }
+      saveSettings(s);
+    } catch (e) { /* 설정 저장 실패는 기록 자체에 영향을 주지 않는다 */ }
+  }
+
+  function getDeviceName() {
+    const n = getSettings().deviceName;
+    return (typeof n === 'string' && n.trim()) ? n.trim() : '이 기기';
+  }
+
+  // ===== localStorage 쓰기 래퍼 (쓸 때마다 드라이브 업로드를 예약) =====
+  function lsSet(key, val) {
+    localStorage.setItem(key, val);
+    markDirty();
+  }
+
+  function lsRemove(key) {
+    localStorage.removeItem(key);
+    markDirty();
+  }
+
+  // ===== 구글 로그인 (캘린더 읽기 + 이 앱이 만든 드라이브 파일) =====
+  const GOOGLE_CLIENT_ID = '159418746303-e2673jep0755jiclt5cdsrnahnoul4g4.apps.googleusercontent.com';
+  const SCOPE_CALENDAR = 'https://www.googleapis.com/auth/calendar.readonly';
+  const SCOPE_DRIVE = 'https://www.googleapis.com/auth/drive.file';
+  const GOOGLE_SCOPE = SCOPE_CALENDAR + ' ' + SCOPE_DRIVE;
+
+  let googleTokenClient = null;
+  let googleAccessToken = null;      // 메모리에만 둔다. localStorage 에 저장하지 않는다.
+  let googleTokenExpiresAt = 0;
+  let googleGrantedScopes = '';
+  let googleEverConnected = false;
+  let tokenRequestInFlight = false;
+  let tokenRequestTimer = null;
+  let silentRefreshTimer = null;
+  let tokenWaiters = [];
+
+  function googleLibReady() {
+    return typeof google !== 'undefined' && google.accounts && google.accounts.oauth2;
+  }
+
+  function ensureTokenClient() {
+    if (googleTokenClient) return true;
+    if (!googleLibReady()) return false;
+    try {
+      googleTokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: GOOGLE_SCOPE,
+        callback: handleGoogleTokenResponse,
+        error_callback: handleGoogleTokenError
+      });
+    } catch (e) {
+      googleTokenClient = null;
+      return false;
+    }
+    return !!googleTokenClient;
+  }
+
+  function hasScope(scope) {
+    return googleGrantedScopes.indexOf(scope) !== -1;
+  }
+
+  function tokenAlive() {
+    return !!googleAccessToken && Date.now() < (googleTokenExpiresAt - 60000);
+  }
+
+  function resolveTokenWaiters(ok) {
+    const list = tokenWaiters;
+    tokenWaiters = [];
+    list.forEach(fn => { try { fn(ok); } catch (e) { /* 무시 */ } });
+  }
+
+  function clearTokenTimer() {
+    if (tokenRequestTimer) { clearTimeout(tokenRequestTimer); tokenRequestTimer = null; }
+  }
+
+  function handleGoogleTokenResponse(resp) {
+    clearTokenTimer();
+    tokenRequestInFlight = false;
+
+    if (!resp || resp.error || !resp.access_token) {
+      googleAccessToken = null;
+      googleTokenExpiresAt = 0;
+      markGcalDisconnected();
+      if (driveEnabled) driveNeedsReconnect = true;
+      renderSyncStatus();
+      announce('구글 연결에 실패했습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.');
+      resolveTokenWaiters(false);
+      return;
+    }
+
+    googleAccessToken = resp.access_token;
+    const sec = parseInt(resp.expires_in, 10);
+    const lifetime = isNaN(sec) ? 3600 : sec;
+    googleTokenExpiresAt = Date.now() + lifetime * 1000;
+    googleGrantedScopes = resp.scope || '';
+    driveNeedsReconnect = false;
+    scheduleSilentRefresh(lifetime);
+
+    const first = !googleEverConnected;
+    googleEverConnected = true;
+    onGoogleConnected(first);
+    resolveTokenWaiters(true);
+  }
+
+  function handleGoogleTokenError(err) {
+    clearTokenTimer();
+    tokenRequestInFlight = false;
+    googleAccessToken = null;
+    googleTokenExpiresAt = 0;
+    markGcalDisconnected();
+    if (driveEnabled) driveNeedsReconnect = true;
+    renderSyncStatus();
+    const type = (err && err.type) || '';
+    if (type === 'popup_closed') {
+      announce('구글 연결 창이 닫혔습니다. 다시 연결하려면 구글 드라이브에 연결 버튼을 눌러주세요.');
+    } else if (type === 'popup_failed_to_open') {
+      announce('구글 연결 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해주세요.');
+    } else {
+      announce('구글 연결에 실패했습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요.');
+    }
+    resolveTokenWaiters(false);
+  }
+
+  function scheduleSilentRefresh(lifetimeSec) {
+    if (silentRefreshTimer) clearTimeout(silentRefreshTimer);
+    const ms = (lifetimeSec - 300) * 1000;   // 만료 5분 전
+    if (ms <= 0) return;
+    silentRefreshTimer = setTimeout(function() {
+      silentRefreshTimer = null;
+      requestGoogleToken('', false);
+    }, ms);
+  }
+
+  // 아이폰 사파리는 사용자 탭 핸들러 안에서 동기적으로 부르지 않으면 창을 막는다.
+  // fromUserTap 이 true 인 호출은 반드시 클릭 핸들러 안에서 직접 불러야 한다.
+  function requestGoogleToken(promptMode, fromUserTap) {
+    if (!ensureTokenClient()) {
+      announce('구글 로그인 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해주세요.');
+      if (driveEnabled) { driveNeedsReconnect = true; renderSyncStatus(); }
+      resolveTokenWaiters(false);
+      return false;
+    }
+    if (tokenRequestInFlight) return true;
+
+    tokenRequestInFlight = true;
+    clearTokenTimer();
+    // 조용한 재발급은 아무 응답 없이 끝나는 경우가 있다(아이폰 사파리 ITP). 일정 시간 뒤 실패로 처리한다.
+    tokenRequestTimer = setTimeout(function() {
+      tokenRequestTimer = null;
+      if (!tokenRequestInFlight) return;
+      tokenRequestInFlight = false;
+      if (driveEnabled) driveNeedsReconnect = true;
+      renderSyncStatus();
+      if (!fromUserTap) {
+        announce('구글 연결이 자동으로 이어지지 않았습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요.');
+      }
+      resolveTokenWaiters(false);
+    }, fromUserTap ? 90000 : 12000);
+
+    try {
+      googleTokenClient.requestAccessToken({ prompt: promptMode });
+    } catch (e) {
+      clearTokenTimer();
+      tokenRequestInFlight = false;
+      announce('구글 연결 창을 열지 못했습니다. 팝업 차단을 해제한 뒤 다시 시도해주세요.');
+      resolveTokenWaiters(false);
+      return false;
+    }
+    return true;
+  }
+
+  // 토큰이 필요할 때 쓴다. 사용자 탭이 없으므로 조용한 재발급만 시도한다.
+  function ensureToken() {
+    return new Promise(function(resolve) {
+      if (tokenAlive()) { resolve(true); return; }
+      tokenWaiters.push(resolve);
+      if (!tokenRequestInFlight) requestGoogleToken('', false);
+    });
+  }
+
+  function onGoogleConnected(isFirst) {
+    // 캘린더 쪽
+    if (hasScope('calendar.readonly')) {
+      markGcalConnected();
+      fetchGoogleCalendarEvents(!isFirst);
+      if (isFirst) announce('구글 계정에 연결되었습니다.');
+    }
+
+    // 드라이브 쪽
+    if (driveEnabled && !hasScope('drive.file')) {
+      driveEnabled = false;
+      patchSettings({ driveEnabled: false });
+      renderSyncStatus();
+      announce('구글 드라이브 권한을 허용하지 않아 드라이브에 저장할 수 없습니다. 지금은 이 브라우저에만 저장됩니다.');
+      return;
+    }
+    renderSyncStatus();
+    if (driveEnabled) {
+      const manual = driveManualSyncPending;
+      driveManualSyncPending = false;
+      driveSync(manual);
+    }
+  }
+
+  // ===== 구글 드라이브 동기화 =====
+  const DRIVE_FILE_NAME = '업무관리-기록.json';
+  const DRIVE_API = 'https://www.googleapis.com/drive/v3/files';
+  const DRIVE_UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3/files';
+  const SYNC_DEBOUNCE_MS = 3000;
+  const PAYLOAD_VERSION = 2;
+  const KEEPALIVE_LIMIT = 60000;   // keepalive 요청 본문 제한(약 64KB)
+
+  let driveEnabled = false;            // 사용자가 연결을 선택했는가
+  let driveFileId = null;              // 드라이브 파일 ID (설정에 캐시해 매번 검색하지 않는다)
+  let driveKnownModifiedTime = null;   // 내가 마지막으로 읽거나 쓴 시각
+  let drivePendingUpload = false;      // 아직 올리지 않은 변경이 있는가
+  let driveLastSyncAt = 0;
+  let driveSyncing = false;
+  let driveSyncQueued = false;
+  let driveNeedsReconnect = false;
+  let driveManualSyncPending = false;
+  let driveLastError = '';
+  let driveErrorAnnounced = '';
+  let driveUploadTimer = null;
+  let conflictPending = null;
+
+  function driveError(msg, kind) {
+    const e = new Error(msg);
+    e.driveKind = kind || 'network';
+    return e;
+  }
+
+  function markDirty() {
+    drivePendingUpload = true;
+    patchSettings({ dirty: true });
+    renderSyncStatus();
+    if (!driveEnabled) return;
+    if (driveUploadTimer) clearTimeout(driveUploadTimer);
+    driveUploadTimer = setTimeout(function() {
+      driveUploadTimer = null;
+      driveSync(false);
+    }, SYNC_DEBOUNCE_MS);
+  }
+
+  function markSynced() {
+    drivePendingUpload = false;
+    driveLastSyncAt = Date.now();
+    driveLastError = '';
+    driveErrorAnnounced = '';
+    patchSettings({
+      dirty: false,
+      lastSyncAt: driveLastSyncAt,
+      driveModifiedTime: driveKnownModifiedTime
+    });
+  }
+
+  // 아이폰은 앱을 백그라운드로 보내면 타이머가 죽는다. 숨겨지는 순간 바로 올린다.
+  function flushDriveUpload() {
+    if (driveUploadTimer) { clearTimeout(driveUploadTimer); driveUploadTimer = null; }
+    if (!driveEnabled || !drivePendingUpload) return;
+    if (!navigator.onLine) return;
+    if (conflictPending) return;
+    driveSync(false, true);
+  }
+
+  function driveFetch(url, options, retried) {
+    options = options || {};
+    return ensureToken().then(function(ok) {
+      if (!ok) throw driveError('구글 인증이 필요합니다.', 'auth');
+
+      const headers = { 'Authorization': 'Bearer ' + googleAccessToken };
+      if (options.headers) {
+        for (const k in options.headers) {
+          if (Object.prototype.hasOwnProperty.call(options.headers, k)) headers[k] = options.headers[k];
+        }
+      }
+      const init = { method: options.method || 'GET', headers: headers };
+      if (options.body !== undefined) init.body = options.body;
+      if (options.keepalive) init.keepalive = true;
+
+      return fetch(url, init).then(function(res) {
+        if (res.status === 401) {
+          googleAccessToken = null;
+          googleTokenExpiresAt = 0;
+          if (retried) {
+            driveNeedsReconnect = true;
+            throw driveError('구글 인증이 만료되었습니다.', 'auth');
+          }
+          return driveFetch(url, options, true);
+        }
+        if (res.status === 403) throw driveError('구글 드라이브 접근 권한이 없습니다.', 'auth');
+        if (res.status === 404) throw driveError('드라이브에서 기록 파일을 찾지 못했습니다.', 'notfound');
+        if (!res.ok) throw driveError('구글 드라이브가 오류를 돌려줬습니다. 코드 ' + res.status + '.', 'network');
+        return res;
+      });
+    });
+  }
+
+  function driveFindFile() {
+    const q = "name='" + DRIVE_FILE_NAME + "' and trashed=false";
+    const url = DRIVE_API +
+      '?q=' + encodeURIComponent(q) +
+      '&fields=' + encodeURIComponent('files(id,name,modifiedTime)') +
+      '&spaces=drive';
+    return driveFetch(url)
+      .then(res => res.json())
+      .then(function(data) {
+        const files = (data && data.files) || [];
+        return files.length ? files[0] : null;
+      });
+  }
+
+  function driveGetMeta(id) {
+    const url = DRIVE_API + '/' + encodeURIComponent(id) +
+      '?fields=' + encodeURIComponent('id,name,modifiedTime');
+    return driveFetch(url).then(res => res.json());
+  }
+
+  function driveDownload(id) {
+    const url = DRIVE_API + '/' + encodeURIComponent(id) + '?alt=media';
+    return driveFetch(url)
+      .then(res => res.text())
+      .then(function(text) {
+        if (!text || !text.trim()) return null;
+        try { return JSON.parse(text); } catch (e) { return null; }
+      });
+  }
+
+  function driveCreate(text) {
+    const boundary = 'diary' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+    const meta = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+    const body =
+      '--' + boundary + '\r\n' +
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+      JSON.stringify(meta) + '\r\n' +
+      '--' + boundary + '\r\n' +
+      'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+      text + '\r\n' +
+      '--' + boundary + '--\r\n';
+
+    const url = DRIVE_UPLOAD_API + '?uploadType=multipart&fields=' + encodeURIComponent('id,modifiedTime');
+    return driveFetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+      body: body
+    }).then(res => res.json());
+  }
+
+  function driveOverwrite(id, text, keepalive) {
+    const url = DRIVE_UPLOAD_API + '/' + encodeURIComponent(id) +
+      '?uploadType=media&fields=' + encodeURIComponent('id,modifiedTime');
+    return driveFetch(url, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: text,
+      keepalive: keepalive === true && text.length < KEEPALIVE_LIMIT
+    }).then(res => res.json());
+  }
+
+  // ===== 저장 파일 형식 =====
+  function buildPayloadText(data) {
+    return JSON.stringify({
+      '형식': '업무관리 기록',
+      '버전': PAYLOAD_VERSION,
+      '마지막저장': localIsoNow(),
+      '저장한기기': getDeviceName(),
+      '데이터': data || collectSyncData()
+    }, null, 2);
+  }
+
+  function readPayloadData(payload) {
+    if (!payload || typeof payload !== 'object') return null;
+    const data = payload['데이터'];
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return null;
+    return data;
+  }
+
+  function readPayloadDevice(payload) {
+    const n = payload && payload['저장한기기'];
+    return (typeof n === 'string' && n.trim()) ? n.trim() : '다른 기기';
+  }
+
+  // ===== 비교 / 병합 =====
+  // 날짜 키 단위로 본다. 한쪽에만 있으면 자동으로 합치고, 양쪽에 있는데 내용이 다르면 충돌로 본다.
+  function compareData(localData, remoteData) {
+    const remoteOnly = [];
+    const localOnly = [];
+    const conflicts = [];
+
+    Object.keys(remoteData).forEach(function(key) {
+      if (!isSyncKey(key)) return;
+      if (!Object.prototype.hasOwnProperty.call(localData, key)) { remoteOnly.push(key); return; }
+      if (syncValueToRaw(key, localData[key]) !== syncValueToRaw(key, remoteData[key])) conflicts.push(key);
+    });
+
+    Object.keys(localData).forEach(function(key) {
+      if (!isSyncKey(key)) return;
+      if (!Object.prototype.hasOwnProperty.call(remoteData, key)) localOnly.push(key);
+    });
+
+    return { remoteOnly: remoteOnly, localOnly: localOnly, conflicts: conflicts };
+  }
+
+  // 드라이브 값을 이 브라우저에 반영한다 (여기서는 업로드를 예약하지 않는다)
+  function applyRemoteKeys(remoteData, keys) {
+    let n = 0;
+    keys.forEach(function(key) {
+      const raw = syncValueToRaw(key, remoteData[key]);
+      if (localStorage.getItem(key) === raw) return;
+      try {
+        localStorage.setItem(key, raw);
+        n++;
+      } catch (e) {
+        announce('저장 공간이 부족해 드라이브의 기록 일부를 이 브라우저에 담지 못했습니다.');
+      }
+    });
+    return n;
+  }
+
+  function driveUpload(data, fileId, keepalive) {
+    const text = buildPayloadText(data);
+    return driveOverwrite(fileId, text, keepalive).then(function(res) {
+      if (res && res.modifiedTime) driveKnownModifiedTime = res.modifiedTime;
+      markSynced();
+      renderSyncStatus();
+      return true;
+    });
+  }
+
+  function driveResolveFile() {
+    if (driveFileId) {
+      return driveGetMeta(driveFileId)
+        .then(function(meta) {
+          return { id: meta.id, modifiedTime: meta.modifiedTime, created: false };
+        })
+        .catch(function(err) {
+          if (err && err.driveKind === 'notfound') {
+            driveFileId = null;
+            patchSettings({ driveFileId: null });
+            return driveResolveFile();
+          }
+          throw err;
+        });
+    }
+    return driveFindFile().then(function(f) {
+      if (f) {
+        driveFileId = f.id;
+        patchSettings({ driveFileId: f.id });
+        return { id: f.id, modifiedTime: f.modifiedTime, created: false };
+      }
+      return driveCreate(buildPayloadText(null)).then(function(created) {
+        driveFileId = created.id;
+        patchSettings({ driveFileId: created.id });
+        return { id: created.id, modifiedTime: created.modifiedTime, created: true };
+      });
+    });
+  }
+
+  function mergeMessage(taken, pushed) {
+    if (taken > 0 && pushed > 0) {
+      return `구글 드라이브에서 ${taken}건을 가져왔고, 이 기기에만 있던 ${pushed}건을 드라이브에 올렸습니다.`;
+    }
+    if (taken > 0) return `구글 드라이브에서 ${taken}건을 가져왔습니다.`;
+    if (pushed > 0) return `이 기기에만 있던 ${pushed}건을 구글 드라이브에 올렸습니다.`;
+    return '';
+  }
+
+  function reconcile(remoteData, payload, file, manual) {
+    const localData = collectSyncData();
+    const diff = compareData(localData, remoteData);
+
+    // 한쪽에만 있는 날짜는 자동으로 합친다
+    const taken = applyRemoteKeys(remoteData, diff.remoteOnly);
+
+    if (diff.conflicts.length === 0) {
+      if (taken > 0) renderAll();
+      driveKnownModifiedTime = file.modifiedTime;
+      if (diff.localOnly.length > 0 || drivePendingUpload) {
+        return driveUpload(collectSyncData(), file.id, false).then(function() {
+          return mergeMessage(taken, diff.localOnly.length);
+        });
+      }
+      markSynced();
+      if (taken > 0) return mergeMessage(taken, 0);
+      return manual ? '구글 드라이브와 내용이 같습니다.' : '';
+    }
+
+    // 같은 날짜가 양쪽에서 다르다.
+    // 이 기기에 아직 안 올린 변경이 없다면 드라이브 쪽이 더 최신이므로 그대로 받는다(충돌이 아니다).
+    if (!drivePendingUpload) {
+      const n = applyRemoteKeys(remoteData, diff.conflicts);
+      renderAll();
+      driveKnownModifiedTime = file.modifiedTime;
+      if (diff.localOnly.length > 0) {
+        return driveUpload(collectSyncData(), file.id, false).then(function() {
+          return `구글 드라이브에서 최신 기록 ${taken + n}건을 가져왔습니다.`;
+        });
+      }
+      markSynced();
+      return `구글 드라이브에서 최신 기록 ${taken + n}건을 가져왔습니다.`;
+    }
+
+    // 양쪽 모두 고쳤다. 자동으로 고르지 않고 사용자에게 묻는다.
+    if (taken > 0) renderAll();
+    conflictPending = {
+      fileId: file.id,
+      modifiedTime: file.modifiedTime,
+      remoteData: remoteData,
+      keys: diff.conflicts,
+      device: readPayloadDevice(payload),
+      savedAt: (payload && typeof payload['마지막저장'] === 'string') ? payload['마지막저장'] : null
+    };
+    openConflictModal();
+    return '';
+  }
+
+  // manual: 사용자가 '지금 동기화'를 직접 누른 경우
+  function driveSync(manual, keepalive) {
+    if (!driveEnabled) return Promise.resolve();
+    if (driveSyncing) { driveSyncQueued = true; return Promise.resolve(); }
+    if (!navigator.onLine) {
+      renderSyncStatus();
+      if (manual) announce('오프라인입니다. 연결되면 자동으로 올립니다.');
+      return Promise.resolve();
+    }
+    // 사용자가 어느 쪽을 쓸지 고르기 전에는 아무것도 덮어쓰지 않는다
+    if (conflictPending && !manual) return Promise.resolve();
+
+    driveSyncing = true;
+    driveSyncQueued = false;
+    renderSyncStatus();
+
+    return driveResolveFile()
+      .then(function(file) {
+        if (file.created) {
+          driveKnownModifiedTime = file.modifiedTime || null;
+          markSynced();
+          return '이 기기의 기록을 구글 드라이브에 저장했습니다.';
+        }
+
+        const remoteChanged = !driveKnownModifiedTime ||
+          (file.modifiedTime && file.modifiedTime !== driveKnownModifiedTime);
+
+        if (!remoteChanged) {
+          if (!drivePendingUpload && !manual) return '';
+          return driveUpload(collectSyncData(), file.id, keepalive).then(function() {
+            return manual ? '구글 드라이브에 저장했습니다.' : '';
+          });
+        }
+
+        return driveDownload(file.id).then(function(payload) {
+          const remoteData = readPayloadData(payload);
+          if (!remoteData) {
+            // 파일이 비었거나 형식을 알아볼 수 없다 -> 이 기기 내용을 올린다
+            return driveUpload(collectSyncData(), file.id, keepalive).then(function() {
+              return '구글 드라이브의 파일이 비어 있어 이 기기의 기록을 올렸습니다.';
+            });
+          }
+          return reconcile(remoteData, payload, file, manual);
+        });
+      })
+      .then(function(msg) {
+        driveSyncing = false;
+        driveLastError = '';
+        driveErrorAnnounced = '';
+        renderSyncStatus();
+        if (msg) announce(msg);
+        if (driveSyncQueued) {
+          driveSyncQueued = false;
+          driveSync(false);
+        }
+      })
+      .catch(function(err) {
+        driveSyncing = false;
+        driveSyncQueued = false;
+        driveFail(err, manual);
+      });
+  }
+
+  function driveFail(err, manual) {
+    let msg;
+    const kind = err && err.driveKind;
+
+    if (kind === 'auth') {
+      driveNeedsReconnect = true;
+      driveLastError = '구글 연결이 끊겼습니다.';
+      msg = '구글 드라이브에 저장하지 못했습니다. 구글 연결이 끊겼습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.';
+    } else if (!navigator.onLine) {
+      driveLastError = '';
+      msg = '오프라인이라 구글 드라이브에 올리지 못했습니다. 연결되면 자동으로 올립니다. 기록은 이 브라우저에 저장되어 있습니다.';
+    } else {
+      driveLastError = (err && err.message) ? err.message : '알 수 없는 오류입니다.';
+      msg = '구글 드라이브에 저장하지 못했습니다. ' + driveLastError + ' 기록은 이 브라우저에 저장되어 있습니다.';
+    }
+
+    renderSyncStatus();
+    // 같은 오류를 반복해서 읽어주지 않는다 (사용자가 직접 누른 경우는 항상 알린다)
+    if (manual || driveErrorAnnounced !== msg) {
+      driveErrorAnnounced = msg;
+      announce(msg);
+    }
+  }
+
+  // ===== 저장 위치 상태 표시 =====
+  function renderSyncStatus() {
+    const statusEl = $('#sync-status');
+    if (!statusEl) return;
+
+    const warnEl = $('#sync-warning');
+    const deviceEl = $('#sync-device-note');
+    const connectBtn = $('#btn-drive-connect');
+    const reconnectBtn = $('#btn-drive-reconnect');
+    const syncBtn = $('#btn-drive-sync');
+    const disconnectBtn = $('#btn-drive-disconnect');
+
+    const offline = !navigator.onLine;
+    let msg;
+
+    if (!driveEnabled) {
+      msg = '이 브라우저에만 저장 중입니다. 다른 기기에서는 안 보입니다.';
+      if (offline) msg += ' 지금은 오프라인입니다.';
+      warnEl.hidden = false;
+      warnEl.textContent = '경고: 구글 드라이브에 연결하지 않으면 아이폰이 기록을 지울 수 있습니다. 아이폰은 홈 화면에 추가한 앱을 한동안 쓰지 않으면 저장해 둔 기록을 비웁니다.';
+      connectBtn.hidden = false;
+      reconnectBtn.hidden = true;
+      syncBtn.hidden = true;
+      disconnectBtn.hidden = true;
+    } else {
+      warnEl.hidden = true;
+      warnEl.textContent = '';
+      connectBtn.hidden = true;
+      syncBtn.hidden = false;
+      disconnectBtn.hidden = false;
+      reconnectBtn.hidden = !driveNeedsReconnect;
+
+      if (offline) {
+        msg = '오프라인입니다. 이 브라우저에 저장했고, 연결되면 자동으로 올립니다.';
+      } else if (conflictPending) {
+        msg = '다른 기기의 기록과 내용이 다릅니다. 지금 동기화 버튼을 눌러 어느 쪽을 쓸지 선택해 주세요.';
+      } else if (driveNeedsReconnect) {
+        msg = '구글 연결이 끊겼습니다. 구글 다시 연결 버튼을 눌러주세요. 그동안 기록은 이 브라우저에만 저장됩니다.';
+      } else if (driveSyncing) {
+        msg = '구글 드라이브와 기록을 맞추는 중입니다.';
+      } else if (driveLastError) {
+        msg = '구글 드라이브에 저장하지 못했습니다. ' + driveLastError + ' 기록은 이 브라우저에 저장되어 있습니다.';
+      } else {
+        msg = '구글 드라이브에 저장 중입니다.';
+        if (driveLastSyncAt) msg += ' 마지막 저장 ' + formatWhenKR(new Date(driveLastSyncAt)) + '.';
+        if (drivePendingUpload) msg += ' 아직 올리지 않은 변경이 있습니다.';
+      }
+    }
+
+    statusEl.textContent = msg;
+    if (deviceEl) deviceEl.textContent = '이 기기의 이름: ' + getDeviceName() + '.';
+  }
+
+  // ===== 모달 공통 (포커스 트랩) =====
+  let activeModal = null;
+  let activeModalReturn = null;
+
+  function openModalEl(overlay, focusEl, returnEl) {
+    if (activeModal) closeModalEl();
+    activeModal = overlay;
+    activeModalReturn = (returnEl && typeof returnEl.focus === 'function') ? returnEl : null;
+    overlay.classList.add('active');
+    document.addEventListener('keydown', genericModalKeyHandler);
+    if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
+  }
+
+  function closeModalEl() {
+    if (!activeModal) return;
+    activeModal.classList.remove('active');
+    document.removeEventListener('keydown', genericModalKeyHandler);
+    const ret = activeModalReturn;
+    activeModal = null;
+    activeModalReturn = null;
+    if (ret && document.contains(ret)) {
+      try { ret.focus(); } catch (e) { /* 무시 */ }
+    }
+  }
+
+  function genericModalKeyHandler(e) {
+    if (!activeModal) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (activeModal === $('#conflict-modal')) resolveConflict('later');
+      else closeModalEl();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+
+    const box = activeModal.querySelector('.modal');
+    if (!box) return;
+    const focusable = box.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  // ===== 충돌 안내 모달 =====
+  function openConflictModal() {
+    const c = conflictPending;
+    if (!c) return;
+
+    const when = c.savedAt ? new Date(c.savedAt) : null;
+    const whenText = (when && !isNaN(when.getTime())) ? formatAgoKR(when) + '에' : '조금 전에';
+    $('#conflict-desc').textContent =
+      `다른 기기(${c.device})에서 ${whenText} 저장한 기록이 있습니다. ` +
+      '이 기기에도 아직 올리지 않은 기록이 있습니다. 어느 쪽을 쓸까요? ' +
+      `내용이 서로 다른 항목은 ${c.keys.length}건입니다.`;
+
+    const ul = $('#conflict-detail');
+    ul.innerHTML = '';
+    c.keys.slice(0, 20).forEach(function(key) {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'listitem');
+      li.textContent = syncKeyLabel(key);
+      ul.appendChild(li);
+    });
+    if (c.keys.length > 20) {
+      const li = document.createElement('li');
+      li.setAttribute('role', 'listitem');
+      li.textContent = `외 ${c.keys.length - 20}건`;
+      ul.appendChild(li);
+    }
+
+    openModalEl($('#conflict-modal'), $('#btn-conflict-local'), $('#btn-drive-sync'));
+    announce('기록이 서로 다릅니다. 어느 쪽을 쓸지 선택해 주세요.');
+  }
+
+  function resolveConflict(choice) {
+    const c = conflictPending;
+    closeModalEl();
+    if (!c) return;
+
+    if (choice === 'later') {
+      announce('나중에 선택합니다. 그때까지 새 기록은 이 브라우저에만 저장됩니다.');
+      renderSyncStatus();
+      return;
+    }
+
+    if (choice === 'remote') {
+      applyRemoteKeys(c.remoteData, c.keys);
+      renderAll();
+    }
+
+    conflictPending = null;
+    driveKnownModifiedTime = c.modifiedTime;
+    drivePendingUpload = true;
+    renderSyncStatus();
+
+    driveUpload(collectSyncData(), c.fileId, false)
+      .then(function() {
+        announce(choice === 'remote'
+          ? '다른 기기의 기록을 가져와 구글 드라이브와 맞췄습니다.'
+          : '이 기기의 기록으로 구글 드라이브를 덮어썼습니다.');
+        $('#sync-section-title').focus();
+      })
+      .catch(function(err) { driveFail(err, true); });
+  }
+
+  // ===== 기기 이름 모달 =====
+  function openDeviceModal() {
+    const input = $('#device-name-input');
+    input.value = getDeviceName();
+    openModalEl($('#device-modal'), input, $('#btn-device-name'));
+    announce('이 기기를 부를 이름을 입력하세요.');
+  }
+
+  function saveDeviceName() {
+    const input = $('#device-name-input');
+    const name = input.value.trim().slice(0, 20);
+    if (!name) {
+      announce('기기 이름을 입력해주세요.');
+      input.focus();
+      return;
+    }
+    patchSettings({ deviceName: name });
+    closeModalEl();
+    renderSyncStatus();
+    announce('기기 이름을 ' + name + '으로 바꿨습니다.');
+  }
+
+  // ===== 연결 / 해제 / 수동 동기화 =====
+  // 아래 세 함수는 반드시 버튼 클릭 핸들러 안에서 바로 불러야 한다.
+  // await 뒤나 setTimeout 안에서 부르면 아이폰 사파리가 구글 창을 막는다.
+  function connectDrive() {
+    driveEnabled = true;
+    driveNeedsReconnect = false;
+    patchSettings({ driveEnabled: true });
+    renderSyncStatus();
+
+    if (tokenAlive() && hasScope('drive.file')) {
+      announce('구글 드라이브와 동기화를 시작합니다.');
+      driveSync(true);
+      return;
+    }
+    driveManualSyncPending = true;
+    announce('구글 계정 선택 창을 엽니다. 이 앱이 만든 파일 외에는 접근하지 않습니다.');
+    requestGoogleToken('consent', true);
+  }
+
+  function reconnectGoogle() {
+    driveNeedsReconnect = false;
+    renderSyncStatus();
+    driveManualSyncPending = true;
+    announce('구글에 다시 연결합니다.');
+    requestGoogleToken('', true);
+  }
+
+  function manualSync() {
+    if (!driveEnabled) {
+      announce('먼저 구글 드라이브에 연결해주세요.');
+      $('#btn-drive-connect').focus();
+      return;
+    }
+    if (!navigator.onLine) {
+      announce('오프라인입니다. 연결되면 자동으로 올립니다.');
+      return;
+    }
+    if (!tokenAlive()) {
+      driveManualSyncPending = true;
+      announce('구글에 다시 연결한 뒤 동기화합니다.');
+      requestGoogleToken('', true);
+      return;
+    }
+    announce('구글 드라이브와 동기화를 시작합니다.');
+    driveSync(true);
+  }
+
+  function disconnectDrive() {
+    driveEnabled = false;
+    conflictPending = null;
+    driveNeedsReconnect = false;
+    if (driveUploadTimer) { clearTimeout(driveUploadTimer); driveUploadTimer = null; }
+    patchSettings({ driveEnabled: false });
+    renderSyncStatus();
+    announce('구글 드라이브 연결을 끊었습니다. 지금부터는 이 브라우저에만 저장됩니다. 드라이브에 저장된 파일은 그대로 남아 있습니다.');
+    $('#btn-drive-connect').focus();
+  }
+
+  // ===== 시작 시 동기화 =====
+  function waitForGoogleLib(cb) {
+    let tries = 0;
+    (function poll() {
+      if (googleLibReady()) { cb(true); return; }
+      if (++tries > 50) { cb(false); return; }   // 약 10초
+      setTimeout(poll, 200);
+    })();
+  }
+
+  function initDriveSync() {
+    const s = getSettings();
+    driveEnabled = s.driveEnabled === true;
+    driveFileId = (typeof s.driveFileId === 'string' && s.driveFileId) ? s.driveFileId : null;
+    driveKnownModifiedTime = (typeof s.driveModifiedTime === 'string') ? s.driveModifiedTime : null;
+    drivePendingUpload = s.dirty === true;
+    driveLastSyncAt = (typeof s.lastSyncAt === 'number') ? s.lastSyncAt : 0;
+    renderSyncStatus();
+
+    if (!driveEnabled) {
+      finishStartup('');
+      return;
+    }
+
+    if (!navigator.onLine) {
+      finishStartup('오프라인입니다. 이 브라우저의 기록을 보여주고, 연결되면 자동으로 올립니다.');
+      return;
+    }
+
+    waitForGoogleLib(function(ok) {
+      if (!ok) {
+        driveNeedsReconnect = true;
+        renderSyncStatus();
+        finishStartup('구글 로그인 스크립트를 불러오지 못했습니다. 지금은 이 브라우저의 기록을 보여줍니다.');
+        return;
+      }
+      ensureTokenClient();
+      finishStartup('구글 드라이브에서 기록을 불러오는 중입니다.');
+      // 토큰을 받으면 onGoogleConnected 에서 driveSync 가 이어진다
+      ensureToken().then(function(gotToken) {
+        if (!gotToken) {
+          driveNeedsReconnect = true;
+          renderSyncStatus();
+        }
+      });
+    });
+  }
+
+  function initSyncEvents() {
+    window.addEventListener('online', function() {
+      renderSyncStatus();
+      if (driveEnabled && drivePendingUpload) {
+        announce('다시 연결되었습니다. 구글 드라이브에 올립니다.');
+        driveSync(false);
+      } else {
+        announce('다시 연결되었습니다.');
+        if (driveEnabled) driveSync(false);
+      }
+    });
+
+    window.addEventListener('offline', function() {
+      renderSyncStatus();
+      announce('오프라인입니다. 기록은 이 브라우저에 저장되고, 연결되면 자동으로 올립니다.');
+    });
+
+    // 아이폰에서 앱을 백그라운드로 보내면 타이머가 죽으므로 숨겨질 때 바로 올린다
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'hidden') flushDriveUpload();
+      else if (driveEnabled && navigator.onLine && !conflictPending) driveSync(false);
+    });
+    window.addEventListener('pagehide', function() { flushDriveUpload(); });
+  }
+
+  // ===== 서비스 워커 등록 (실패해도 앱은 그대로 동작한다) =====
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    const host = location.hostname;
+    if (location.protocol !== 'https:' && host !== 'localhost' && host !== '127.0.0.1') return;
+    try {
+      navigator.serviceWorker.register('./sw.js').catch(function() { /* 무시 */ });
+    } catch (e) { /* 무시 */ }
+  }
+
   // ===== 데이터 =====
   function getTodos(dateStr) {
     try {
@@ -970,7 +2438,7 @@ body {
 
   function saveTodos(dateStr, todos) {
     try {
-      localStorage.setItem(`diary_todos_${dateStr}`, JSON.stringify(todos));
+      lsSet(`diary_todos_${dateStr}`, JSON.stringify(todos));
     } catch (e) {
       announce('저장 공간이 부족합니다. 일부 데이터를 삭제한 후 다시 시도해주세요.');
     }
@@ -984,7 +2452,7 @@ body {
 
   function saveEvents(dateStr, events) {
     try {
-      localStorage.setItem(`diary_events_${dateStr}`, JSON.stringify(events));
+      lsSet(`diary_events_${dateStr}`, JSON.stringify(events));
     } catch (e) {
       announce('저장 공간이 부족합니다. 일부 데이터를 삭제한 후 다시 시도해주세요.');
     }
@@ -997,9 +2465,9 @@ body {
   function saveMemo(dateStr, text) {
     try {
       if (text.trim()) {
-        localStorage.setItem('diary_memo_' + dateStr, text);
+        lsSet('diary_memo_' + dateStr, text);
       } else {
-        localStorage.removeItem('diary_memo_' + dateStr);
+        lsRemove('diary_memo_' + dateStr);
       }
     } catch (e) {
       announce('저장 공간이 부족합니다.');
@@ -1035,8 +2503,8 @@ body {
   function saveWeeklyGoal(dateStr, text) {
     try {
       var key = 'diary_weekly_' + getWeekKey(dateStr);
-      if (text.trim()) localStorage.setItem(key, text);
-      else localStorage.removeItem(key);
+      if (text.trim()) lsSet(key, text);
+      else lsRemove(key);
     } catch(e) { announce('저장 공간이 부족합니다.'); }
   }
 
@@ -1047,8 +2515,8 @@ body {
   function saveMonthlyGoal(dateStr, text) {
     try {
       var key = 'diary_monthly_' + getMonthKey(dateStr);
-      if (text.trim()) localStorage.setItem(key, text);
-      else localStorage.removeItem(key);
+      if (text.trim()) lsSet(key, text);
+      else lsRemove(key);
     } catch(e) { announce('저장 공간이 부족합니다.'); }
   }
 
@@ -1080,8 +2548,6 @@ body {
 
   // ===== 상태 =====
   let currentDate = todayStr();
-  let gcalAccessToken = null;
-  let gcalTokenClient = null;
   let gcalEvents = [];
 
   // 초기화: 마지막 본 날짜 복원
@@ -1101,8 +2567,8 @@ body {
     renderGoals();
     gcalEvents = [];
     renderEvents();
-    if (gcalAccessToken) {
-      fetchGoogleCalendarEvents();
+    if (googleAccessToken) {
+      fetchGoogleCalendarEvents(false);
     }
     announce(`${formatDateKR(dateStr)}로 이동했습니다.`);
   }
@@ -1111,6 +2577,75 @@ body {
     const d = new Date(currentDate + 'T00:00:00');
     d.setDate(d.getDate() + days);
     setDate(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+  }
+
+  // 현재 날짜 화면 전체를 다시 그린다 (동기화 파일 반영 등)
+  function renderAll() {
+    $('#date-picker').value = currentDate;
+    $('#date-display').textContent = formatDateKR(currentDate);
+    renderTodos();
+    renderMemo();
+    renderGoals();
+    renderEvents();
+  }
+
+  // ===== 마감일 =====
+  // 기존 기록에는 due 필드가 없으므로 읽는 쪽에서 방어한다
+  function getDue(todo) {
+    if (!todo) return null;
+    const due = todo.due;
+    return (typeof due === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(due)) ? due : null;
+  }
+
+  function dayDiff(fromStr, toStr) {
+    const a = new Date(fromStr + 'T00:00:00');
+    const b = new Date(toStr + 'T00:00:00');
+    return Math.round((b - a) / 86400000);
+  }
+
+  function formatDueLabel(due) {
+    const diff = dayDiff(todayStr(), due);
+    if (diff < 0) return `${-diff}일 지남`;
+    if (diff === 0) return '오늘 마감';
+    if (diff === 1) return '내일 마감';
+    const d = new Date(due + 'T00:00:00');
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 마감`;
+  }
+
+  function dueClassName(due) {
+    const diff = dayDiff(todayStr(), due);
+    if (diff < 0) return 'todo-due due-overdue';
+    if (diff === 0) return 'todo-due due-today';
+    return 'todo-due';
+  }
+
+  // 마감 표시 span (글자로 명시, 색에만 의존하지 않음)
+  function createDueSpan(due) {
+    const span = document.createElement('span');
+    span.className = dueClassName(due);
+    const sr = document.createElement('span');
+    sr.className = 'sr-only';
+    sr.textContent = '마감 기한 ';
+    span.appendChild(sr);
+    span.appendChild(document.createTextNode(formatDueLabel(due)));
+    return span;
+  }
+
+  function formatShortDateKR(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
+
+  // 모든 날짜의 할 일 키를 훑는다
+  function getAllTodoDates() {
+    const dates = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key) continue;
+      const m = key.match(/^diary_todos_(\d{4}-\d{2}-\d{2})$/);
+      if (m) dates.push(m[1]);
+    }
+    return dates.sort();
   }
 
   // ===== 투두 렌더링 =====
@@ -1126,6 +2661,7 @@ body {
 
     renderTodoList('#pending-list', pending, false);
     renderTodoList('#completed-list', completed, true);
+    renderAttention();
   }
 
   function renderTodoList(selector, items, isCompleted) {
@@ -1147,6 +2683,8 @@ body {
       li.setAttribute('role', 'listitem');
       li.dataset.id = todo.id;
 
+      const due = getDue(todo);
+
       const cb = document.createElement('input');
       cb.type = 'checkbox';
       cb.className = 'todo-checkbox';
@@ -1166,6 +2704,7 @@ body {
 
       li.appendChild(cb);
       li.appendChild(span);
+      if (due) li.appendChild(createDueSpan(due));
       li.appendChild(delBtn);
       ul.appendChild(li);
     });
@@ -1174,6 +2713,7 @@ body {
   // ===== 투두 CRUD =====
   function addTodo() {
     const input = $('#todo-input');
+    const dueInput = $('#todo-due-input');
     const text = input.value.trim();
     if (!text) {
       announce('할 일 내용을 입력해주세요.');
@@ -1181,18 +2721,25 @@ body {
       return;
     }
 
+    const dueRaw = dueInput ? dueInput.value.trim() : '';
+    const due = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw) ? dueRaw : null;
+
     const todos = getTodos(currentDate);
     todos.push({
       id: genId(),
       text: text,
       completed: false,
+      due: due,
       createdAt: new Date().toISOString(),
       completedAt: null
     });
     saveTodos(currentDate, todos);
     input.value = '';
+    if (dueInput) dueInput.value = '';
     renderTodos();
-    announce(`"${text}" 할 일이 추가되었습니다.`);
+    announce(due
+      ? `"${text}" 할 일이 추가되었습니다. ${formatDueLabel(due)}.`
+      : `"${text}" 할 일이 추가되었습니다.`);
     input.focus();
   }
 
@@ -1262,6 +2809,288 @@ body {
     }
   }
 
+  // ===== 챙길 것 (모든 날짜의 기한 지남 / 오늘 마감) =====
+  function collectAttention() {
+    const today = todayStr();
+    const overdue = [];
+    const dueToday = [];
+
+    getAllTodoDates().forEach(dateStr => {
+      getTodos(dateStr).forEach(todo => {
+        if (!todo || todo.completed) return;
+        const due = getDue(todo);
+        if (!due) return;
+        if (due < today) overdue.push({ date: dateStr, todo: todo, due: due });
+        else if (due === today) dueToday.push({ date: dateStr, todo: todo, due: due });
+      });
+    });
+
+    overdue.sort((a, b) => a.due < b.due ? -1 : (a.due > b.due ? 1 : 0));
+    dueToday.sort((a, b) => a.date < b.date ? -1 : (a.date > b.date ? 1 : 0));
+    return { overdue: overdue, dueToday: dueToday };
+  }
+
+  function attentionSummaryText(items) {
+    const parts = [];
+    if (items.overdue.length) parts.push(`기한 지난 할 일 ${items.overdue.length}건`);
+    if (items.dueToday.length) parts.push(`오늘 마감 ${items.dueToday.length}건`);
+    return parts.length ? parts.join(', ') + '이 있습니다.' : '';
+  }
+
+  function renderAttention() {
+    const ul = $('#attention-list');
+    const summary = $('#attention-summary');
+    if (!ul || !summary) return;
+
+    const items = collectAttention();
+    const all = items.overdue.concat(items.dueToday);
+    ul.innerHTML = '';
+
+    if (all.length === 0) {
+      summary.textContent = '챙길 것이 없습니다.';
+      return;
+    }
+    summary.textContent = attentionSummaryText(items);
+
+    all.forEach(entry => {
+      const todo = entry.todo;
+      const li = document.createElement('li');
+      li.className = 'todo-item attention-item';
+      li.setAttribute('role', 'listitem');
+      li.dataset.id = todo.id;
+      li.dataset.date = entry.date;
+
+      const span = document.createElement('span');
+      span.className = 'todo-text';
+      span.textContent = todo.text;
+
+      const origin = document.createElement('span');
+      origin.className = 'attention-origin';
+      origin.textContent = `${formatShortDateKR(entry.date)}에 적음`;
+
+      const doneBtn = document.createElement('button');
+      doneBtn.className = 'btn btn-primary btn-small attention-done';
+      doneBtn.appendChild(document.createTextNode('완료'));
+      const doneSr = document.createElement('span');
+      doneSr.className = 'sr-only';
+      doneSr.textContent = `: ${todo.text}`;
+      doneBtn.appendChild(doneSr);
+      doneBtn.addEventListener('click', () => completeAttentionTodo(entry.date, todo.id));
+
+      const goBtn = document.createElement('button');
+      goBtn.className = 'btn btn-accent btn-small';
+      goBtn.appendChild(document.createTextNode('그 날짜로 이동'));
+      const goSr = document.createElement('span');
+      goSr.className = 'sr-only';
+      goSr.textContent = `: ${formatShortDateKR(entry.date)}, ${todo.text}`;
+      goBtn.appendChild(goSr);
+      goBtn.addEventListener('click', () => setDate(entry.date));
+
+      li.appendChild(span);
+      li.appendChild(createDueSpan(entry.due));
+      li.appendChild(origin);
+      li.appendChild(doneBtn);
+      li.appendChild(goBtn);
+      ul.appendChild(li);
+    });
+  }
+
+  // 목록이 다시 그려진 뒤 포커스 복구: 같은 자리 → 마지막 항목 → 섹션 헤딩
+  function focusAttentionAt(index) {
+    const buttons = $$('#attention-list .attention-done');
+    if (buttons.length === 0) {
+      $('#attention-section-title').focus();
+      return;
+    }
+    const target = buttons[Math.min(index, buttons.length - 1)];
+    target.focus();
+  }
+
+  function completeAttentionTodo(dateStr, id) {
+    // 다시 그린 뒤 같은 자리로 포커스를 돌리기 위해 현재 위치를 먼저 기억
+    let index = 0;
+    const rows = $$('#attention-list .attention-item');
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].dataset.id === id && rows[i].dataset.date === dateStr) { index = i; break; }
+    }
+
+    const todos = getTodos(dateStr);
+    const todo = todos.find(t => t.id === id);
+    if (!todo) {
+      renderAttention();
+      announce('해당 할 일을 찾지 못했습니다.');
+      focusAttentionAt(index);
+      return;
+    }
+
+    todo.completed = true;
+    todo.completedAt = new Date().toISOString();
+    saveTodos(dateStr, todos);
+
+    if (dateStr === currentDate) renderTodos();
+    else renderAttention();
+
+    try { playCompleteSound(); } catch { /* 오디오 불가 환경 무시 */ }
+    announce(`"${todo.text}" 완료 처리되었습니다.`);
+    focusAttentionAt(index);
+  }
+
+  function announceAttentionOnLoad(prefix) {
+    const items = collectAttention();
+    const text = attentionSummaryText(items);
+    const msg = [prefix, text].filter(s => s && s.trim()).join(' ');
+    if (msg) announce(msg);
+  }
+
+  // 시작 안내는 한 번만, 날짜 이동 안내 뒤에 겹치지 않게
+  let startupDone = false;
+  function finishStartup(prefix) {
+    if (startupDone) return;
+    startupDone = true;
+    setTimeout(() => { announceAttentionOnLoad(prefix); }, 1200);
+  }
+
+  // ===== 전체 검색 =====
+  const SEARCH_LIMIT = 50;
+  const weekKeyDateCache = {};
+
+  function weekKeyToDate(weekKey) {
+    if (weekKeyDateCache[weekKey]) return weekKeyDateCache[weekKey];
+    const m = weekKey.match(/^(\d{4})-W(\d{1,2})$/);
+    if (!m) return null;
+    const year = parseInt(m[1], 10);
+    const d = new Date(year, 0, 1);
+    for (let i = 0; i < 372; i++) {
+      const ds = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (getWeekKey(ds) === weekKey) {
+        weekKeyDateCache[weekKey] = ds;
+        return ds;
+      }
+      d.setDate(d.getDate() + 1);
+    }
+    return `${year}-01-01`;
+  }
+
+  function searchAll(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const results = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || key.indexOf('diary_') !== 0) continue;
+
+      const todoMatch = key.match(/^diary_todos_(\d{4}-\d{2}-\d{2})$/);
+      if (todoMatch) {
+        getTodos(todoMatch[1]).forEach(todo => {
+          if (!todo || typeof todo.text !== 'string') return;
+          if (todo.text.toLowerCase().indexOf(q) === -1) return;
+          results.push({ date: todoMatch[1], kind: '할 일', text: todo.text });
+        });
+        continue;
+      }
+
+      const memoMatch = key.match(/^diary_memo_(\d{4}-\d{2}-\d{2})$/);
+      if (memoMatch) {
+        const memo = localStorage.getItem(key) || '';
+        if (memo.toLowerCase().indexOf(q) !== -1) {
+          results.push({ date: memoMatch[1], kind: '메모', text: memo });
+        }
+        continue;
+      }
+
+      const weeklyMatch = key.match(/^diary_weekly_(\d{4}-W\d{1,2})$/);
+      if (weeklyMatch) {
+        const text = localStorage.getItem(key) || '';
+        if (text.toLowerCase().indexOf(q) !== -1) {
+          const date = weekKeyToDate(weeklyMatch[1]);
+          if (date) results.push({ date: date, kind: '이번 주 목표', text: text });
+        }
+        continue;
+      }
+
+      const monthlyMatch = key.match(/^diary_monthly_(\d{4}-\d{2})$/);
+      if (monthlyMatch) {
+        const text = localStorage.getItem(key) || '';
+        if (text.toLowerCase().indexOf(q) !== -1) {
+          results.push({ date: monthlyMatch[1] + '-01', kind: '이번 달 목표', text: text });
+        }
+      }
+    }
+
+    results.sort((a, b) => a.date < b.date ? 1 : (a.date > b.date ? -1 : 0));
+    return { items: results.slice(0, SEARCH_LIMIT), total: results.length };
+  }
+
+  function renderSearchResults(results, total) {
+    const ul = $('#search-results');
+    const title = $('#search-results-title');
+    ul.innerHTML = '';
+
+    if (results.length === 0) {
+      title.textContent = '검색 결과 없음';
+      const li = document.createElement('li');
+      li.className = 'no-events';
+      li.setAttribute('role', 'listitem');
+      li.textContent = '찾은 것이 없습니다.';
+      ul.appendChild(li);
+      return;
+    }
+
+    title.textContent = total > results.length
+      ? `검색 결과 ${total}건 중 최근 ${results.length}건`
+      : `검색 결과 ${results.length}건`;
+
+    results.forEach(item => {
+      const li = document.createElement('li');
+      li.className = 'search-item';
+      li.setAttribute('role', 'listitem');
+
+      const meta = document.createElement('p');
+      meta.className = 'search-meta';
+      meta.textContent = `${formatDateKR(item.date)} · ${item.kind}`;
+
+      const body = document.createElement('p');
+      body.className = 'search-body';
+      body.textContent = item.text.length > 300 ? item.text.slice(0, 300) + '…' : item.text;
+
+      const goBtn = document.createElement('button');
+      goBtn.className = 'btn btn-accent btn-small';
+      goBtn.appendChild(document.createTextNode('그 날짜로 이동'));
+      const goSr = document.createElement('span');
+      goSr.className = 'sr-only';
+      goSr.textContent = `: ${formatDateKR(item.date)}`;
+      goBtn.appendChild(goSr);
+      goBtn.addEventListener('click', () => setDate(item.date));
+
+      li.appendChild(meta);
+      li.appendChild(body);
+      li.appendChild(goBtn);
+      ul.appendChild(li);
+    });
+  }
+
+  function doSearch() {
+    const input = $('#search-input');
+    const query = input.value.trim();
+    if (!query) {
+      announce('검색어를 입력해주세요.');
+      input.focus();
+      return;
+    }
+
+    const found = searchAll(query);
+    renderSearchResults(found.items, found.total);
+    if (found.total === 0) {
+      announce('찾은 것이 없습니다.');
+    } else if (found.total > found.items.length) {
+      announce(`${found.total}건 찾았습니다. 최근 ${found.items.length}건만 보여줍니다.`);
+    } else {
+      announce(`${found.total}건 찾았습니다.`);
+    }
+    $('#search-results-title').focus();
+  }
+
   // ===== 일정 렌더링 =====
   function renderEvents() {
     const manualEvents = getEvents(currentDate).map(ev => ({ ...ev, source: 'manual' }));
@@ -1290,12 +3119,20 @@ body {
       div.className = 'event-item';
       div.setAttribute('role', 'listitem');
 
+      // 사용자 입력과 구글 캘린더 제목은 textContent 로만 넣는다
+      const timeSpan = document.createElement('span');
       if (ev.allDay) {
-        div.innerHTML = `<span class="event-allday">종일</span><span class="event-title">${escapeHtml(ev.title)}</span>`;
+        timeSpan.className = 'event-allday';
+        timeSpan.textContent = '종일';
       } else {
-        const timeText = ev.endTime ? `${ev.startTime} - ${ev.endTime}` : ev.startTime;
-        div.innerHTML = `<span class="event-time">${escapeHtml(timeText)}</span><span class="event-title">${escapeHtml(ev.title)}</span>`;
+        timeSpan.className = 'event-time';
+        timeSpan.textContent = ev.endTime ? `${ev.startTime} - ${ev.endTime}` : (ev.startTime || '');
       }
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'event-title';
+      titleSpan.textContent = ev.title;
+      div.appendChild(timeSpan);
+      div.appendChild(titleSpan);
 
       const sourceSpan = document.createElement('span');
       if (ev.source === 'google') {
@@ -1318,12 +3155,6 @@ body {
 
       container.appendChild(div);
     });
-  }
-
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
   }
 
   function deleteEvent(id) {
@@ -1594,62 +3425,38 @@ body {
   }
 
   // ===== 구글 캘린더 연동 =====
-  const GCAL_CLIENT_ID = '159418746303-e2673jep0755jiclt5cdsrnahnoul4g4.apps.googleusercontent.com';
-  const GCAL_SCOPE = 'https://www.googleapis.com/auth/calendar.readonly';
-
-  function initGoogleCalendar() {
-    if (typeof google === 'undefined' || !google.accounts) {
-      return;
-    }
-    gcalTokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: GCAL_CLIENT_ID,
-      scope: GCAL_SCOPE,
-      callback: handleGCalTokenResponse
-    });
-  }
-
-  function handleGCalTokenResponse(response) {
-    if (response.error) {
-      announce('구글 캘린더 연결에 실패했습니다. 다시 시도해주세요.');
-      return;
-    }
-    gcalAccessToken = response.access_token;
+  // 로그인은 위의 구글 로그인 코드(토큰 클라이언트 하나)를 그대로 쓴다.
+  function markGcalConnected() {
     const btn = $('#btn-gcal-connect');
+    if (!btn) return;
     btn.textContent = '연결됨';
     btn.classList.add('connected');
     btn.setAttribute('aria-label', '구글 캘린더 연결됨');
-    announce('구글 캘린더에 연결되었습니다.');
-    fetchGoogleCalendarEvents();
-
-    // 토큰 만료 전 자동 갱신 (expires_in은 초 단위)
-    if (response.expires_in) {
-      const refreshMs = (parseInt(response.expires_in, 10) - 60) * 1000;
-      if (refreshMs > 0) {
-        setTimeout(() => {
-          if (gcalTokenClient) {
-            gcalTokenClient.requestAccessToken({ prompt: '' });
-          }
-        }, refreshMs);
-      }
-    }
   }
 
+  function markGcalDisconnected() {
+    const btn = $('#btn-gcal-connect');
+    if (!btn) return;
+    btn.textContent = '구글 캘린더 연결';
+    btn.classList.remove('connected');
+    btn.setAttribute('aria-label', '구글 캘린더 연결');
+  }
+
+  // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다
   function connectGoogleCalendar() {
-    if (!gcalTokenClient) {
-      initGoogleCalendar();
-    }
-    if (!gcalTokenClient) {
-      announce('구글 로그인 라이브러리를 불러오지 못했습니다. 페이지를 새로고침한 후 다시 시도해주세요.');
+    if (tokenAlive() && hasScope('calendar.readonly')) {
+      announce('이미 구글에 연결되어 있습니다. 일정을 다시 불러옵니다.');
+      fetchGoogleCalendarEvents(false);
       return;
     }
-    if (gcalAccessToken) {
-      return;
-    }
-    gcalTokenClient.requestAccessToken({ prompt: 'consent' });
+    announce('구글 계정 선택 창을 엽니다.');
+    requestGoogleToken('consent', true);
   }
 
-  function fetchGoogleCalendarEvents() {
-    if (!gcalAccessToken) return;
+  // quiet: 토큰 자동 갱신처럼 사용자가 시키지 않은 조회는 결과를 읽어주지 않는다
+  function fetchGoogleCalendarEvents(quiet) {
+    if (!googleAccessToken) return;
+    if (!hasScope('calendar.readonly')) return;
 
     const timeMin = currentDate + 'T00:00:00+09:00';
     const timeMax = currentDate + 'T23:59:59+09:00';
@@ -1663,19 +3470,17 @@ body {
     const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?${params.toString()}`;
 
     fetch(url, {
-      headers: { 'Authorization': 'Bearer ' + gcalAccessToken }
+      headers: { 'Authorization': 'Bearer ' + googleAccessToken }
     })
     .then(response => {
       if (response.status === 401) {
-        gcalAccessToken = null;
-        const btn = $('#btn-gcal-connect');
-        btn.textContent = '구글 캘린더 연결';
-        btn.classList.remove('connected');
-        btn.setAttribute('aria-label', '구글 캘린더 연결');
-        announce('구글 캘린더 인증이 만료되었습니다. 다시 연결해주세요.');
-        if (gcalTokenClient) {
-          gcalTokenClient.requestAccessToken({ prompt: '' });
-        }
+        googleAccessToken = null;
+        googleTokenExpiresAt = 0;
+        markGcalDisconnected();
+        announce('구글 캘린더 인증이 만료되었습니다. 다시 연결을 시도합니다.');
+        ensureToken().then(function(ok) {
+          if (!ok) announce('구글 캘린더에 다시 연결하지 못했습니다. 구글 캘린더 연결 버튼을 눌러주세요.');
+        });
         return null;
       }
       if (!response.ok) {
@@ -1706,7 +3511,7 @@ body {
         };
       });
       renderEvents();
-      announce(`구글 캘린더에서 ${gcalEvents.length}개 일정을 불러왔습니다.`);
+      if (!quiet) announce(`구글 캘린더에서 ${gcalEvents.length}개 일정을 불러왔습니다.`);
     })
     .catch(() => {
       announce('구글 캘린더 일정을 불러오는 데 실패했습니다.');
@@ -1715,6 +3520,8 @@ body {
 
   // ===== 이벤트 바인딩 =====
   function init() {
+    registerServiceWorker();
+
     // 날짜 초기화
     setDate(currentDate);
 
@@ -1734,6 +3541,55 @@ body {
         addTodo();
       }
     });
+    $('#todo-due-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        addTodo();
+      }
+    });
+
+    // 검색
+    $('#btn-search').addEventListener('click', doSearch);
+    $('#search-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        doSearch();
+      }
+    });
+    // 검색 전 초기 안내 (섹션 위치를 항상 유지)
+    (function() {
+      const li = document.createElement('li');
+      li.className = 'no-events';
+      li.setAttribute('role', 'listitem');
+      li.textContent = '검색어를 입력하고 검색 버튼을 눌러주세요.';
+      $('#search-results').appendChild(li);
+    })();
+
+    // 저장 위치 (구글 드라이브)
+    // 아래 버튼들은 핸들러 안에서 바로 구글 토큰을 요청한다 (아이폰 사파리 팝업 차단 회피)
+    $('#btn-drive-connect').addEventListener('click', connectDrive);
+    $('#btn-drive-reconnect').addEventListener('click', reconnectGoogle);
+    $('#btn-drive-sync').addEventListener('click', manualSync);
+    $('#btn-drive-disconnect').addEventListener('click', disconnectDrive);
+    $('#btn-device-name').addEventListener('click', openDeviceModal);
+
+    // 기기 이름 모달
+    $('#btn-device-save').addEventListener('click', saveDeviceName);
+    $('#btn-device-cancel').addEventListener('click', function() {
+      closeModalEl();
+      announce('기기 이름을 바꾸지 않았습니다.');
+    });
+    $('#device-name-input').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') { e.preventDefault(); saveDeviceName(); }
+    });
+
+    // 충돌 안내 모달
+    $('#btn-conflict-local').addEventListener('click', function() { resolveConflict('local'); });
+    $('#btn-conflict-remote').addEventListener('click', function() { resolveConflict('remote'); });
+    $('#btn-conflict-later').addEventListener('click', function() { resolveConflict('later'); });
+
+    initSyncEvents();
+    initDriveSync();
 
     // 일정 가져오기
     $('#btn-import-toggle').addEventListener('click', toggleImport);
@@ -1784,9 +3640,8 @@ body {
       monthlyTextarea.addEventListener('input', debouncedMonthlySave);
     }
 
-    // 구글 캘린더 연결
+    // 구글 캘린더 연결 (드라이브와 같은 로그인 창을 쓴다)
     $('#btn-gcal-connect').addEventListener('click', connectGoogleCalendar);
-    initGoogleCalendar();
 
     // 전역 단축키 (accesskey 보완)
     document.addEventListener('keydown', (e) => {
@@ -1804,6 +3659,15 @@ body {
           case 'e':
             e.preventDefault();
             openExportModal();
+            break;
+          case 'f':
+            e.preventDefault();
+            $('#search-input').focus();
+            announce('검색란입니다. 찾을 단어를 입력하고 엔터를 누르세요.');
+            break;
+          case 'k':
+            e.preventDefault();
+            $('#attention-section-title').focus();
             break;
         }
       }
