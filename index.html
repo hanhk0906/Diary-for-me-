@@ -962,6 +962,38 @@ input, textarea, select, button {
   flex-wrap: wrap;
 }
 
+/* 마감 알림 섹션 */
+#cal-section-title::before {
+  content: '\23F0  ';
+}
+
+.cal-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.cal-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.cal-time-input {
+  flex: 0 0 auto;
+  cursor: pointer;
+}
+
+/* .btn 이 display 를 정하므로 hidden 만으로는 숨겨지지 않는다 */
+#btn-cal-connect[hidden] {
+  display: none;
+}
+
 .conflict-detail {
   margin: 0 0 20px 20px;
   padding: 0;
@@ -1112,6 +1144,7 @@ input, textarea, select, button {
   <a class="skip-link" href="#completed-section-title">해낸 일로 건너뛰기</a>
   <a class="skip-link" href="#search-section-title">검색으로 건너뛰기</a>
   <a class="skip-link" href="#sync-section-title">저장 위치로 건너뛰기</a>
+  <a class="skip-link" href="#cal-section-title">마감 알림으로 건너뛰기</a>
 </nav>
 
 <!-- 스크린리더 라이브 알림 영역 -->
@@ -1261,6 +1294,44 @@ input, textarea, select, button {
       </p>
     </section>
 
+    <!-- 마감 알림 섹션 (마감일을 구글 캘린더 일정으로 보낸다) -->
+    <section class="section" id="cal-section" aria-labelledby="cal-section-title">
+      <h2 class="section-title" id="cal-section-title" tabindex="-1">마감 알림</h2>
+
+      <p class="sync-status" id="cal-status">마감 알림 상태를 확인하는 중입니다.</p>
+
+      <div class="cal-field">
+        <label class="cal-check" for="cal-enabled">
+          <input type="checkbox" id="cal-enabled" class="todo-checkbox">
+          <span>마감일을 구글 캘린더에 넣기</span>
+        </label>
+      </div>
+
+      <div class="cal-field">
+        <label for="cal-time" class="input-label">알림 시각 (마감일 당일)</label>
+        <input type="time" id="cal-time" class="todo-input cal-time-input" value="09:00">
+      </div>
+
+      <div class="cal-field">
+        <label class="cal-check" for="cal-day-before">
+          <input type="checkbox" id="cal-day-before" class="todo-checkbox">
+          <span>하루 전에도 알림</span>
+        </label>
+      </div>
+
+      <p class="sync-note" id="cal-pending-note"></p>
+
+      <div class="sync-btns">
+        <button class="btn btn-google" id="btn-cal-connect" hidden>구글 캘린더에 연결</button>
+        <button class="btn btn-primary" id="btn-cal-rebuild">지금 전부 다시 만들기</button>
+      </div>
+
+      <p class="sync-note">
+        이 앱이 만든 일정만 고치거나 지웁니다. 직접 만든 다른 일정은 건드리지 않습니다.
+        할 일을 완료하거나 지우면 그 일정도 함께 지웁니다.
+      </p>
+    </section>
+
     <!-- 단축키 안내 -->
     <details class="shortcut-info">
       <summary>키보드 단축키 안내</summary>
@@ -1339,6 +1410,19 @@ input, textarea, select, button {
     <div class="modal-btns">
       <button class="btn btn-accent" id="btn-device-cancel">취소</button>
       <button class="btn btn-primary" id="btn-device-save">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 마감 알림 확인 모달 (제목/설명/버튼 글자는 상황에 따라 바뀐다) -->
+<div class="modal-overlay" id="cal-modal" role="dialog" aria-modal="true"
+     aria-labelledby="cal-modal-title" aria-describedby="cal-modal-desc">
+  <div class="modal">
+    <h2 class="modal-title" id="cal-modal-title"></h2>
+    <p class="modal-text" id="cal-modal-desc"></p>
+    <div class="modal-btns">
+      <button class="btn btn-accent" id="btn-cal-modal-no"></button>
+      <button class="btn btn-primary" id="btn-cal-modal-yes"></button>
     </div>
   </div>
 </div>
@@ -1518,9 +1602,11 @@ input, textarea, select, button {
     markDirty();
   }
 
-  // ===== 구글 로그인 (캘린더 읽기 + 이 앱이 만든 드라이브 파일) =====
+  // ===== 구글 로그인 (캘린더 읽기·쓰기 + 이 앱이 만든 드라이브 파일) =====
+  // calendar.events 는 일정 읽기와 쓰기를 모두 포함한다. 읽기 전용 스코프를 따로 요청하지 않는다.
   const GOOGLE_CLIENT_ID = '159418746303-e2673jep0755jiclt5cdsrnahnoul4g4.apps.googleusercontent.com';
-  const SCOPE_CALENDAR = 'https://www.googleapis.com/auth/calendar.readonly';
+  const SCOPE_CALENDAR = 'https://www.googleapis.com/auth/calendar.events';
+  const SCOPE_CALENDAR_KEY = 'calendar.events';
   const SCOPE_DRIVE = 'https://www.googleapis.com/auth/drive.file';
   const GOOGLE_SCOPE = SCOPE_CALENDAR + ' ' + SCOPE_DRIVE;
 
@@ -1680,11 +1766,14 @@ input, textarea, select, button {
 
   function onGoogleConnected(isFirst) {
     // 캘린더 쪽
-    if (hasScope('calendar.readonly')) {
+    if (hasScope(SCOPE_CALENDAR_KEY)) {
       markGcalConnected();
       fetchGoogleCalendarEvents(!isFirst);
       if (isFirst) announce('구글 계정에 연결되었습니다.');
     }
+    if (hasScope(SCOPE_CALENDAR_KEY)) calAuthAnnounced = false;
+    renderCalendarStatus();
+    if (calSyncEnabled && hasScope(SCOPE_CALENDAR_KEY)) scheduleCalendarSync(0);
 
     // 드라이브 쪽
     if (driveEnabled && !hasScope('drive.file')) {
@@ -1914,6 +2003,8 @@ input, textarea, select, button {
         announce('저장 공간이 부족해 드라이브의 기록 일부를 이 브라우저에 담지 못했습니다.');
       }
     });
+    // 다른 기기에서 완료하거나 마감일을 지운 할 일이 있으면 그 일정도 지운다
+    if (n > 0) calendarSweepAfterSync();
     return n;
   }
 
@@ -2725,15 +2816,18 @@ input, textarea, select, button {
     const due = /^\d{4}-\d{2}-\d{2}$/.test(dueRaw) ? dueRaw : null;
 
     const todos = getTodos(currentDate);
-    todos.push({
+    const newTodo = {
       id: genId(),
       text: text,
       completed: false,
       due: due,
       createdAt: new Date().toISOString(),
-      completedAt: null
-    });
+      completedAt: null,
+      calendarEventId: null
+    };
+    todos.push(newTodo);
     saveTodos(currentDate, todos);
+    calendarNotifyChange(currentDate, newTodo);
     input.value = '';
     if (dueInput) dueInput.value = '';
     renderTodos();
@@ -2770,6 +2864,7 @@ input, textarea, select, button {
     todo.completed = !todo.completed;
     todo.completedAt = todo.completed ? new Date().toISOString() : null;
     saveTodos(currentDate, todos);
+    calendarNotifyChange(currentDate, todo);
     renderTodos();
 
     if (todo.completed) {
@@ -2796,6 +2891,8 @@ input, textarea, select, button {
     const wasCompleted = todo.completed;
     const filtered = todos.filter(t => t.id !== id);
     saveTodos(currentDate, filtered);
+    // 할 일이 사라지기 때문에 일정 번호를 먼저 챙겨 둔 todo 로 알린다
+    calendarNotifyRemoved(currentDate, todo);
     renderTodos();
     announce(`"${text}" 할 일이 삭제되었습니다.`);
 
@@ -2926,6 +3023,7 @@ input, textarea, select, button {
     todo.completed = true;
     todo.completedAt = new Date().toISOString();
     saveTodos(dateStr, todos);
+    calendarNotifyChange(dateStr, todo);
 
     if (dateStr === currentDate) renderTodos();
     else renderAttention();
@@ -3444,7 +3542,7 @@ input, textarea, select, button {
 
   // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다
   function connectGoogleCalendar() {
-    if (tokenAlive() && hasScope('calendar.readonly')) {
+    if (tokenAlive() && hasScope(SCOPE_CALENDAR_KEY)) {
       announce('이미 구글에 연결되어 있습니다. 일정을 다시 불러옵니다.');
       fetchGoogleCalendarEvents(false);
       return;
@@ -3456,7 +3554,7 @@ input, textarea, select, button {
   // quiet: 토큰 자동 갱신처럼 사용자가 시키지 않은 조회는 결과를 읽어주지 않는다
   function fetchGoogleCalendarEvents(quiet) {
     if (!googleAccessToken) return;
-    if (!hasScope('calendar.readonly')) return;
+    if (!hasScope(SCOPE_CALENDAR_KEY)) return;
 
     const timeMin = currentDate + 'T00:00:00+09:00';
     const timeMax = currentDate + 'T23:59:59+09:00';
@@ -3516,6 +3614,653 @@ input, textarea, select, button {
     .catch(() => {
       announce('구글 캘린더 일정을 불러오는 데 실패했습니다.');
     });
+  }
+
+  // ===== 마감 알림 (마감일 → 구글 캘린더 일정) =====
+  // 캘린더는 부가 기능이다. 여기서 무슨 일이 생겨도 할 일 저장은 이미 끝나 있어야 한다.
+  const CAL_API = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+  const CAL_APP_TAG = 'work-manager';        // 이 앱이 만든 일정인지 확인하는 표식
+  const CAL_TIMEZONE = 'Asia/Seoul';
+  const CAL_DEFAULT_TIME = '09:00';
+  const CAL_DEBOUNCE_MS = 3000;
+  const CAL_BATCH_MAX = 5;                   // 한 번에 처리할 최대 건수
+  const CAL_PENDING_MAX = 300;
+  const CAL_RATE_RETRY_MAX = 3;
+
+  let calSyncEnabled = false;
+  let calReminderTime = CAL_DEFAULT_TIME;
+  let calDayBefore = false;
+  let calPending = [];      // 캘린더 반영 대기 목록 [{d:날짜, i:할일id, e:일정id, f:강제갱신}]
+  let calSigs = {};         // "날짜|id" → 마지막으로 캘린더에 보낸 내용의 서명 (이 기기 전용)
+  let calTimer = null;
+  let calRunning = false;
+  let calAuthAnnounced = false;
+  let calModalYes = null;
+  let calModalNo = null;
+
+  function calKey(dateStr, id) { return dateStr + '|' + id; }
+
+  function calError(msg, kind) {
+    const e = new Error(msg);
+    e.calKind = kind || 'network';
+    return e;
+  }
+
+  function calDelay(ms) {
+    return new Promise(function(resolve) { setTimeout(resolve, ms); });
+  }
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+
+  function parseHm(value) {
+    const m = (typeof value === 'string') ? value.match(/^(\d{1,2}):(\d{2})$/) : null;
+    if (!m) return null;
+    const h = parseInt(m[1], 10);
+    const mi = parseInt(m[2], 10);
+    if (isNaN(h) || isNaN(mi) || h > 23 || mi > 59) return null;
+    return { h: h, m: mi };
+  }
+
+  function formatTimeKR(value) {
+    const t = parseHm(value) || parseHm(CAL_DEFAULT_TIME);
+    const ampm = t.h < 12 ? '오전' : '오후';
+    let h12 = t.h % 12;
+    if (h12 === 0) h12 = 12;
+    return ampm + ' ' + h12 + '시' + (t.m ? ' ' + t.m + '분' : '');
+  }
+
+  // 로컬(한국) 기준으로 문자열을 조립한다. toISOString 은 UTC 로 밀리므로 쓰지 않는다.
+  function calLocalDateTime(dateStr, hm, addMinutes) {
+    const p = dateStr.split('-');
+    const d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]), hm.h, hm.m + (addMinutes || 0), 0, 0);
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+           'T' + pad2(d.getHours()) + ':' + pad2(d.getMinutes()) + ':00';
+  }
+
+  // 기존 기록에는 calendarEventId 가 없다. 읽는 쪽에서 방어한다.
+  function calEventIdOf(todo) {
+    const v = todo ? todo.calendarEventId : null;
+    return (typeof v === 'string' && v) ? v : null;
+  }
+
+  function calendarWritable() {
+    return tokenAlive() && hasScope(SCOPE_CALENDAR_KEY);
+  }
+
+  function calSignature(todo, due) {
+    return [todo.text, due, calReminderTime, calDayBefore ? '1' : '0'].join('');
+  }
+
+  function calRememberSig(dateStr, id, sig) { calSigs[calKey(dateStr, id)] = sig; }
+  function calForgetSig(dateStr, id) { delete calSigs[calKey(dateStr, id)]; }
+
+  function calEventBody(todo, due, dateStr) {
+    const hm = parseHm(calReminderTime) || parseHm(CAL_DEFAULT_TIME);
+    const overrides = [{ method: 'popup', minutes: 0 }];
+    if (calDayBefore) overrides.push({ method: 'popup', minutes: 1440 });
+    return {
+      summary: '[업무] ' + todo.text,
+      description: '업무 관리 앱에서 만든 일정입니다.\n마감일: ' + formatShortDateKR(due),
+      start: { dateTime: calLocalDateTime(due, hm, 0), timeZone: CAL_TIMEZONE },
+      end: { dateTime: calLocalDateTime(due, hm, 30), timeZone: CAL_TIMEZONE },
+      extendedProperties: { private: { app: CAL_APP_TAG, todoId: String(todo.id), todoDate: dateStr } },
+      reminders: { useDefault: false, overrides: overrides }
+    };
+  }
+
+  // 캘린더 호출 공통. 401 은 토큰 재발급, 403 사용량 초과는 지수 백오프로 최대 3번.
+  function calFetch(url, options, retriedAuth, rateTries) {
+    options = options || {};
+    rateTries = rateTries || 0;
+    return ensureToken().then(function(ok) {
+      if (!ok) throw calError('구글 인증이 필요합니다.', 'auth');
+      if (!hasScope(SCOPE_CALENDAR_KEY)) throw calError('구글 캘린더 권한이 없습니다.', 'auth');
+
+      const headers = { 'Authorization': 'Bearer ' + googleAccessToken };
+      const init = { method: options.method || 'GET', headers: headers };
+      if (options.body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+        init.body = options.body;
+      }
+
+      return fetch(url, init).then(function(res) {
+        if (res.status === 401) {
+          googleAccessToken = null;
+          googleTokenExpiresAt = 0;
+          if (retriedAuth) throw calError('구글 인증이 만료되었습니다.', 'auth');
+          return calFetch(url, options, true, rateTries);
+        }
+        if (res.status === 404 || res.status === 410) throw calError('일정을 찾지 못했습니다.', 'notfound');
+        if (res.status === 403) {
+          return res.text().then(function(body) {
+            const limited = body.indexOf('rateLimitExceeded') !== -1 || body.indexOf('userRateLimitExceeded') !== -1;
+            if (limited && rateTries < CAL_RATE_RETRY_MAX) {
+              return calDelay(Math.pow(2, rateTries) * 1000).then(function() {
+                return calFetch(url, options, retriedAuth, rateTries + 1);
+              });
+            }
+            if (limited) throw calError('구글 캘린더 사용량 제한에 걸렸습니다.', 'network');
+            throw calError('구글 캘린더 권한이 없습니다.', 'auth');
+          });
+        }
+        if (!res.ok) throw calError('구글 캘린더가 오류를 돌려줬습니다. 코드 ' + res.status + '.', 'network');
+        return res;
+      });
+    });
+  }
+
+  function calEventUrl(eventId) {
+    return CAL_API + '/' + encodeURIComponent(eventId);
+  }
+
+  function calCreateEvent(todo, due, dateStr) {
+    return calFetch(CAL_API, { method: 'POST', body: JSON.stringify(calEventBody(todo, due, dateStr)) })
+      .then(function(res) { return res.json(); })
+      .then(function(ev) {
+        if (!ev || !ev.id) throw calError('구글 캘린더가 일정 번호를 돌려주지 않았습니다.', 'network');
+        return ev.id;
+      });
+  }
+
+  // 일정이 이미 없으면 false. (지워진 일정을 고치려다 오류로 처리하지 않는다)
+  function calPatchEvent(eventId, body) {
+    return calFetch(calEventUrl(eventId), { method: 'PATCH', body: JSON.stringify(body) })
+      .then(function() { return true; })
+      .catch(function(err) {
+        if (err && err.calKind === 'notfound') return false;
+        throw err;
+      });
+  }
+
+  // 지우기 전에 반드시 읽어서 이 앱이 만든 일정인지 확인한다.
+  // 사용자가 직접 만든 일정은 절대 지우지 않는다.
+  function calDeleteEvent(eventId) {
+    return calFetch(calEventUrl(eventId))
+      .then(function(res) { return res.json(); })
+      .then(function(ev) {
+        const priv = ev && ev.extendedProperties && ev.extendedProperties.private;
+        if (!priv || priv.app !== CAL_APP_TAG) return 'foreign';
+        return calFetch(calEventUrl(eventId), { method: 'DELETE' }).then(function() { return 'deleted'; });
+      })
+      .catch(function(err) {
+        if (err && err.calKind === 'notfound') return 'gone';
+        throw err;
+      });
+  }
+
+  // ===== 대기 목록 =====
+  function saveCalState() {
+    patchSettings({ calPending: calPending, calSigs: calSigs });
+  }
+
+  function calEnqueue(dateStr, id, eventId, force) {
+    if (!dateStr || !id) return;
+    const k = calKey(dateStr, id);
+    for (let i = 0; i < calPending.length; i++) {
+      if (calKey(calPending[i].d, calPending[i].i) === k) {
+        if (eventId) calPending[i].e = eventId;
+        if (force) calPending[i].f = true;
+        saveCalState();
+        return;
+      }
+    }
+    calPending.push({ d: dateStr, i: id, e: eventId || null, f: !!force });
+    while (calPending.length > CAL_PENDING_MAX) calPending.shift();
+    saveCalState();
+  }
+
+  function calRemoveEntry(entry) {
+    const idx = calPending.indexOf(entry);
+    if (idx !== -1) calPending.splice(idx, 1);
+  }
+
+  function scheduleCalendarSync(delayMs) {
+    if (calTimer) { clearTimeout(calTimer); calTimer = null; }
+    const wait = (typeof delayMs === 'number') ? delayMs : CAL_DEBOUNCE_MS;
+    calTimer = setTimeout(function() {
+      calTimer = null;
+      runCalendarQueue();
+    }, wait);
+  }
+
+  // 할 일이 바뀐 것을 캘린더 쪽에 알린다 (저장은 이미 끝난 뒤에 부른다)
+  function calendarNotifyChange(dateStr, todo) {
+    if (!calSyncEnabled || !todo || !todo.id) return;
+    const eventId = calEventIdOf(todo);
+    if (!getDue(todo) && !eventId) return;      // 마감일 없는 할 일은 아무것도 만들지 않는다
+    calEnqueue(dateStr, todo.id, eventId, false);
+    scheduleCalendarSync();
+    renderCalendarStatus();
+  }
+
+  // 할 일이 사라지기 직전에 부른다. 일정 번호를 여기서 챙겨 둬야 지울 수 있다.
+  function calendarNotifyRemoved(dateStr, todo) {
+    if (!calSyncEnabled) return;
+    const eventId = calEventIdOf(todo);
+    if (!eventId) return;
+    calEnqueue(dateStr, todo.id, eventId, false);
+    scheduleCalendarSync();
+    renderCalendarStatus();
+  }
+
+  // 드라이브에서 다른 기기의 기록을 받아온 뒤에 부른다.
+  // 새 일정을 만들지는 않고, 이미 만들어 둔 일정 가운데 지워야 할 것만 찾아 대기 목록에 넣는다.
+  function calendarSweepAfterSync() {
+    if (!calSyncEnabled) return;
+    let n = 0;
+    getAllTodoDates().forEach(function(dateStr) {
+      getTodos(dateStr).forEach(function(todo) {
+        if (!todo || !todo.id) return;
+        const eventId = calEventIdOf(todo);
+        if (!eventId) return;
+        if (getDue(todo) && !todo.completed) return;   // 아직 살아 있는 마감일은 그대로 둔다
+        calEnqueue(dateStr, todo.id, eventId, false);
+        n++;
+      });
+    });
+    if (n) { renderCalendarStatus(); scheduleCalendarSync(); }
+  }
+
+  function calSetEventId(dateStr, id, eventId) {
+    const todos = getTodos(dateStr);
+    const todo = todos.find(function(t) { return t && t.id === id; });
+    if (!todo) return;
+    const next = eventId || null;
+    if (calEventIdOf(todo) === next) return;
+    todo.calendarEventId = next;
+    saveTodos(dateStr, todos);
+  }
+
+  function calProcessEntry(entry) {
+    const dateStr = entry.d;
+    const id = entry.i;
+    const todos = getTodos(dateStr);
+    const todo = todos.find(function(t) { return t && t.id === id; });
+
+    // 할 일이 지워졌다: 저장해 둔 일정만 지운다
+    if (!todo) {
+      if (!entry.e) return Promise.resolve('skipped');
+      return calDeleteEvent(entry.e).then(function(r) {
+        calForgetSig(dateStr, id);
+        return r === 'deleted' ? 'deleted' : 'skipped';
+      });
+    }
+
+    const due = getDue(todo);
+    const eventId = calEventIdOf(todo);
+    const wanted = !!due && !todo.completed;
+
+    // 완료했거나 마감일을 지웠다: 일정을 지운다
+    if (!wanted) {
+      if (!eventId) { calForgetSig(dateStr, id); return Promise.resolve('skipped'); }
+      return calDeleteEvent(eventId).then(function(r) {
+        calSetEventId(dateStr, id, null);
+        calForgetSig(dateStr, id);
+        return r === 'deleted' ? 'deleted' : 'skipped';
+      });
+    }
+
+    const sig = calSignature(todo, due);
+    const knownSig = calSigs[calKey(dateStr, id)];
+
+    if (eventId) {
+      if (!entry.f && knownSig === sig) return Promise.resolve('skipped');
+      if (!entry.f && knownSig === undefined) {
+        // 다른 기기가 만든 일정이다. 내용을 알 수 없으니 그대로 두고 서명만 기억한다.
+        calRememberSig(dateStr, id, sig);
+        return Promise.resolve('skipped');
+      }
+      return calPatchEvent(eventId, calEventBody(todo, due, dateStr)).then(function(ok) {
+        if (ok) { calRememberSig(dateStr, id, sig); return 'updated'; }
+        // 캘린더에서 이미 지워진 일정이었다. 새로 만든다.
+        return calCreateEvent(todo, due, dateStr).then(function(newId) {
+          calSetEventId(dateStr, id, newId);
+          calRememberSig(dateStr, id, sig);
+          return 'created';
+        });
+      });
+    }
+
+    return calCreateEvent(todo, due, dateStr).then(function(newId) {
+      calSetEventId(dateStr, id, newId);
+      calRememberSig(dateStr, id, sig);
+      return 'created';
+    });
+  }
+
+  function calResultMessage(counts) {
+    const parts = [];
+    if (counts.created) parts.push('일정 ' + counts.created + '건을 만들었습니다');
+    if (counts.updated) parts.push(counts.updated + '건을 고쳤습니다');
+    if (counts.deleted) parts.push(counts.deleted + '건을 지웠습니다');
+    return parts.length ? '구글 캘린더에 ' + parts.join(', ') + '.' : '';
+  }
+
+  function runCalendarQueue() {
+    if (calRunning) return;
+    if (!calSyncEnabled || !calPending.length) { renderCalendarStatus(); return; }
+    if (!navigator.onLine) { renderCalendarStatus(); return; }   // 오프라인이면 시도하지 않는다
+
+    calRunning = true;
+    const batch = calPending.slice(0, CAL_BATCH_MAX);
+    const counts = { created: 0, updated: 0, deleted: 0 };
+    let failed = 0;
+    let authFailed = false;
+
+    const step = function(idx) {
+      if (idx >= batch.length || authFailed) return Promise.resolve();
+      const entry = batch[idx];
+      return calProcessEntry(entry)
+        .then(function(result) {
+          calRemoveEntry(entry);
+          if (counts[result] !== undefined) counts[result]++;
+        })
+        .catch(function(err) {
+          if (err && err.calKind === 'auth') authFailed = true;
+          failed++;   // 대기 목록에 남겨 다음 기회에 다시 시도한다
+        })
+        .then(function() { return step(idx + 1); });
+    };
+
+    step(0).then(function() {
+      calRunning = false;
+      saveCalState();
+      renderCalendarStatus();
+
+      const done = counts.created + counts.updated + counts.deleted;
+      const rest = calPending.length;
+
+      if (authFailed) {
+        if (!calAuthAnnounced) {
+          calAuthAnnounced = true;
+          announce('구글 캘린더 권한이 없어 마감 일정을 반영하지 못했습니다. 마감 알림 섹션의 구글 캘린더에 연결 버튼을 눌러주세요. 할 일은 저장되어 있습니다.');
+        }
+        return;
+      }
+      calAuthAnnounced = false;
+
+      const msg = calResultMessage(counts);
+      if (msg) announce(msg);
+
+      if (rest > 0) {
+        if (failed > 0 && done === 0) {
+          announce('마감 일정 ' + rest + '건을 반영하지 못했습니다. 잠시 뒤에 다시 시도합니다. 할 일은 저장되어 있습니다.');
+          scheduleCalendarSync(30000);
+        } else {
+          announce('남은 마감 일정 ' + rest + '건을 이어서 반영합니다.');
+          scheduleCalendarSync(1000);
+        }
+      }
+    });
+  }
+
+  // ===== 마감 알림 설정 =====
+  function loadCalSettings() {
+    const s = getSettings();
+    calSyncEnabled = s.calSyncEnabled === true;
+    calReminderTime = parseHm(s.calReminderTime) ? s.calReminderTime : CAL_DEFAULT_TIME;
+    calDayBefore = s.calDayBefore === true;
+    calPending = Array.isArray(s.calPending)
+      ? s.calPending.filter(function(e) { return e && typeof e.d === 'string' && typeof e.i === 'string'; })
+      : [];
+    calSigs = (s.calSigs && typeof s.calSigs === 'object' && !Array.isArray(s.calSigs)) ? s.calSigs : {};
+  }
+
+  function renderCalendarStatus() {
+    const el = $('#cal-status');
+    if (!el) return;
+    const connectBtn = $('#btn-cal-connect');
+    const noteEl = $('#cal-pending-note');
+    let msg;
+
+    if (!calSyncEnabled) {
+      msg = '꺼져 있습니다.';
+      if (connectBtn) connectBtn.hidden = true;
+    } else if (calendarWritable()) {
+      msg = '구글 캘린더에 넣고 있습니다. 마감일 당일 ' + formatTimeKR(calReminderTime) + '에 알립니다.';
+      if (calDayBefore) msg += ' 하루 전 같은 시각에도 알립니다.';
+      if (connectBtn) connectBtn.hidden = true;
+    } else {
+      msg = '구글 캘린더 권한이 없습니다. 아래 버튼을 눌러 연결하세요.';
+      if (connectBtn) connectBtn.hidden = false;
+    }
+
+    el.textContent = msg;
+    if (noteEl) {
+      noteEl.textContent = (calSyncEnabled && calPending.length)
+        ? '캘린더 반영 대기 ' + calPending.length + '건이 있습니다.'
+        : '';
+    }
+  }
+
+  function openCalModal(opt) {
+    const overlay = $('#cal-modal');
+    if (!overlay) return;
+    $('#cal-modal-title').textContent = opt.title;
+    $('#cal-modal-desc').textContent = opt.desc;
+
+    const yes = $('#btn-cal-modal-yes');
+    const no = $('#btn-cal-modal-no');
+    yes.textContent = opt.yesLabel;
+    no.textContent = opt.noLabel;
+    yes.className = 'btn ' + (opt.danger ? 'btn-danger' : 'btn-primary');
+
+    calModalYes = opt.onYes || null;
+    calModalNo = opt.onNo || null;
+
+    openModalEl(overlay, opt.danger ? no : yes, opt.returnEl || null);
+    announce(opt.title + ' ' + opt.desc + ' ' + opt.yesLabel + ', 또는 ' + opt.noLabel + ' 중에서 선택하세요.');
+  }
+
+  function closeCalModal(choice) {
+    const yesFn = calModalYes;
+    const noFn = calModalNo;
+    calModalYes = null;
+    calModalNo = null;
+    closeModalEl();
+    if (choice === 'yes' && yesFn) yesFn();
+    else if (choice === 'no' && noFn) noFn();
+  }
+
+  function countCalendarLinked() {
+    let n = 0;
+    getAllTodoDates().forEach(function(dateStr) {
+      getTodos(dateStr).forEach(function(todo) {
+        if (calEventIdOf(todo)) n++;
+      });
+    });
+    return n;
+  }
+
+  // 기존 마감일을 캘린더에 한꺼번에 반영한다. force 면 이미 넣은 일정도 다시 덮어쓴다.
+  function calendarRebuildAll(force) {
+    if (!calSyncEnabled) {
+      announce('마감일을 구글 캘린더에 넣기가 꺼져 있습니다. 먼저 체크박스를 켜주세요.');
+      return;
+    }
+    let n = 0;
+    getAllTodoDates().forEach(function(dateStr) {
+      getTodos(dateStr).forEach(function(todo) {
+        if (!todo || !todo.id) return;
+        const due = getDue(todo);
+        const eventId = calEventIdOf(todo);
+        if (!due && !eventId) return;
+        if (todo.completed && !eventId) return;
+        calEnqueue(dateStr, todo.id, eventId, force);
+        n++;
+      });
+    });
+
+    if (!n) {
+      announce('구글 캘린더에 넣을 마감일이 없습니다.');
+      renderCalendarStatus();
+      return;
+    }
+    renderCalendarStatus();
+    if (!navigator.onLine) {
+      announce('오프라인입니다. 마감일 ' + n + '건을 대기 목록에 넣었습니다. 연결되면 반영합니다.');
+      return;
+    }
+    announce('마감일 ' + n + '건을 구글 캘린더에 반영합니다. 진행 상황을 알려드리겠습니다.');
+    scheduleCalendarSync(0);
+  }
+
+  // 이 앱이 만든 일정을 전부 지운다 (설정을 끌 때만 쓴다)
+  function purgeAllCalendarEvents() {
+    const list = [];
+    getAllTodoDates().forEach(function(dateStr) {
+      getTodos(dateStr).forEach(function(todo) {
+        const eventId = calEventIdOf(todo);
+        if (eventId) list.push({ d: dateStr, i: todo.id, e: eventId });
+      });
+    });
+
+    if (!list.length) {
+      announce('구글 캘린더에서 지울 일정이 없습니다.');
+      return;
+    }
+    if (!navigator.onLine) {
+      announce('오프라인입니다. 연결된 뒤에 다시 시도해주세요.');
+      return;
+    }
+    announce('구글 캘린더에서 이 앱이 만든 일정 ' + list.length + '건을 지웁니다.');
+    calPurgeStep(list, 0, 0, 0);
+  }
+
+  function calPurgeStep(list, index, removed, failed) {
+    if (index >= list.length) {
+      calPending = [];
+      calSigs = {};
+      saveCalState();
+      renderCalendarStatus();
+      let msg = '구글 캘린더에서 일정 ' + removed + '건을 지웠습니다.';
+      if (failed) msg += ' ' + failed + '건은 지우지 못했습니다.';
+      announce(msg);
+      return;
+    }
+    const item = list[index];
+    calDeleteEvent(item.e)
+      .then(function(r) {
+        calSetEventId(item.d, item.i, null);
+        return { removed: removed + (r === 'deleted' ? 1 : 0), failed: failed };
+      })
+      .catch(function() {
+        return { removed: removed, failed: failed + 1 };
+      })
+      .then(function(next) {
+        if (index > 0 && index % 20 === 0) {
+          announce('지우는 중입니다. ' + index + '건까지 처리했습니다.');
+        }
+        calPurgeStep(list, index + 1, next.removed, next.failed);
+      });
+  }
+
+  // 알림 시각 / 하루 전 설정을 바꿨을 때 기존 일정에도 반영할지 묻는다
+  function askCalRetroApply(returnEl) {
+    if (!calSyncEnabled) return;
+    const count = countCalendarLinked();
+    if (!count) return;
+    openCalModal({
+      title: '기존 일정에도 적용할까요?',
+      desc: '구글 캘린더에 이미 넣어 둔 마감 일정이 ' + count + '건 있습니다. 바꾼 설정을 기존 일정에도 적용할 수 있습니다. 건수가 많으면 시간이 걸립니다.',
+      yesLabel: '기존 것도 전부 바꾸기',
+      noLabel: '지금 것부터 적용',
+      returnEl: returnEl,
+      onYes: function() { calendarRebuildAll(true); },
+      onNo: function() { announce('지금부터 만드는 일정에만 적용합니다.'); }
+    });
+  }
+
+  function onCalEnabledChange() {
+    const cb = $('#cal-enabled');
+    const on = !!(cb && cb.checked);
+    calSyncEnabled = on;
+    patchSettings({ calSyncEnabled: on });
+    renderCalendarStatus();
+
+    if (on) {
+      announce('마감일을 구글 캘린더에 넣습니다.');
+      if (!calendarWritable()) {
+        announce('구글 캘린더 권한이 필요합니다. 구글 캘린더에 연결 버튼을 눌러주세요.');
+        return;
+      }
+      calendarRebuildAll(false);
+      return;
+    }
+
+    announce('마감일을 구글 캘린더에 넣지 않습니다. 앞으로 새 일정은 만들지 않습니다.');
+    if (!countCalendarLinked()) return;
+    openCalModal({
+      title: '이미 만든 일정도 지울까요?',
+      desc: '지금까지 이 앱이 구글 캘린더에 넣은 마감 일정이 남아 있습니다. 이 앱이 만든 일정만 지웁니다. 직접 만든 다른 일정은 건드리지 않습니다.',
+      yesLabel: '전부 지우기',
+      noLabel: '그대로 두기',
+      danger: true,
+      returnEl: cb,
+      onYes: purgeAllCalendarEvents,
+      onNo: function() { announce('구글 캘린더에 있는 일정을 그대로 둡니다.'); }
+    });
+  }
+
+  function onCalTimeChange() {
+    const input = $('#cal-time');
+    const value = input ? input.value : '';
+    if (!parseHm(value)) {
+      announce('알림 시각을 읽지 못했습니다. 오전 9시로 되돌립니다.');
+      calReminderTime = CAL_DEFAULT_TIME;
+      if (input) input.value = CAL_DEFAULT_TIME;
+      patchSettings({ calReminderTime: CAL_DEFAULT_TIME });
+      renderCalendarStatus();
+      return;
+    }
+    if (value === calReminderTime) return;
+    calReminderTime = value;
+    patchSettings({ calReminderTime: value });
+    renderCalendarStatus();
+    announce('알림 시각을 ' + formatTimeKR(value) + '으로 바꿨습니다.');
+    askCalRetroApply(input);
+  }
+
+  function onCalDayBeforeChange() {
+    const cb = $('#cal-day-before');
+    const on = !!(cb && cb.checked);
+    if (on === calDayBefore) return;
+    calDayBefore = on;
+    patchSettings({ calDayBefore: on });
+    renderCalendarStatus();
+    announce(on ? '하루 전에도 알립니다.' : '하루 전 알림을 끕니다.');
+    askCalRetroApply(cb);
+  }
+
+  // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다
+  function connectCalendarWrite() {
+    if (calendarWritable()) {
+      announce('이미 구글 캘린더에 연결되어 있습니다.');
+      renderCalendarStatus();
+      if (calSyncEnabled) scheduleCalendarSync(0);
+      return;
+    }
+    announce('구글 계정 선택 창을 엽니다. 캘린더 권한을 허용해주세요.');
+    requestGoogleToken('consent', true);
+  }
+
+  function initCalendarSync() {
+    loadCalSettings();
+
+    const cb = $('#cal-enabled');
+    if (cb) cb.checked = calSyncEnabled;
+    const timeInput = $('#cal-time');
+    if (timeInput) timeInput.value = calReminderTime;
+    const dayBefore = $('#cal-day-before');
+    if (dayBefore) dayBefore.checked = calDayBefore;
+
+    renderCalendarStatus();
+
+    window.addEventListener('online', function() {
+      if (calSyncEnabled && calPending.length) scheduleCalendarSync(2000);
+    });
+
+    if (calSyncEnabled && calPending.length) scheduleCalendarSync(8000);
   }
 
   // ===== 이벤트 바인딩 =====
@@ -3587,6 +4332,16 @@ input, textarea, select, button {
     $('#btn-conflict-local').addEventListener('click', function() { resolveConflict('local'); });
     $('#btn-conflict-remote').addEventListener('click', function() { resolveConflict('remote'); });
     $('#btn-conflict-later').addEventListener('click', function() { resolveConflict('later'); });
+
+    // 마감 알림 (마감일 → 구글 캘린더)
+    $('#cal-enabled').addEventListener('change', onCalEnabledChange);
+    $('#cal-time').addEventListener('change', onCalTimeChange);
+    $('#cal-day-before').addEventListener('change', onCalDayBeforeChange);
+    $('#btn-cal-connect').addEventListener('click', connectCalendarWrite);
+    $('#btn-cal-rebuild').addEventListener('click', function() { calendarRebuildAll(true); });
+    $('#btn-cal-modal-yes').addEventListener('click', function() { closeCalModal('yes'); });
+    $('#btn-cal-modal-no').addEventListener('click', function() { closeCalModal('no'); });
+    initCalendarSync();
 
     initSyncEvents();
     initDriveSync();
