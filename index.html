@@ -94,44 +94,6 @@ input, textarea, select, button {
   border: 0;
 }
 
-/* 상단 건너뛰기 링크 - 평소엔 화면에서 숨지만 스크린리더 순차 탐색과 탭 이동에는 잡힌다 */
-.skip-links {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 200;
-}
-
-.skip-link {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-  color: var(--btn-text);
-  background: var(--primary);
-  text-decoration: underline;
-  font-weight: 700;
-}
-
-.skip-link:focus {
-  position: static;
-  width: auto;
-  height: auto;
-  min-height: 44px;
-  margin: 0;
-  padding: 10px 16px;
-  clip: auto;
-  overflow: visible;
-  display: inline-flex;
-  align-items: center;
-  border-radius: 0 0 8px 0;
-}
-
 /* 라이브 알림 영역 */
 #live-status {
   position: absolute;
@@ -422,7 +384,6 @@ input, textarea, select, button {
   gap: 8px;
   margin-bottom: 20px;
   flex-wrap: wrap;
-  align-items: center;
 }
 
 .todo-input {
@@ -846,9 +807,12 @@ input, textarea, select, button {
   white-space: nowrap;
 }
 
+/* 날짜 칸은 글자 칸보다 2px 높게 그려져 원본 입력줄 높이(47px)를 바꾸므로 위아래 여백을 1px씩 줄인다 */
 .todo-due-input {
   flex: 0 0 auto;
   cursor: pointer;
+  padding-top: 9px;
+  padding-bottom: 9px;
 }
 
 /* 마감 표시 */
@@ -875,13 +839,14 @@ input, textarea, select, button {
 
 /* 챙길 것 섹션 */
 #attention-section-title::before {
-  content: '\2757  ';
+  content: '\1F514  ';
 }
 
 .attention-summary {
+  font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-medium);
-  margin-bottom: 10px;
+  color: var(--text-light);
+  margin-bottom: 8px;
 }
 
 .attention-item {
@@ -900,9 +865,24 @@ input, textarea, select, button {
   padding: 6px 12px;
 }
 
-/* 검색 섹션 */
-#search-section-title::before {
-  content: '\1F50D  ';
+/* 검색 대화상자 (Alt+F) */
+.modal.search-modal {
+  max-width: 560px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+#search-results-title[hidden] {
+  display: none;
+}
+
+#search-results {
+  margin-bottom: 16px;
 }
 
 .search-item {
@@ -927,73 +907,6 @@ input, textarea, select, button {
   margin-bottom: 6px;
 }
 
-/* 저장 위치 섹션 */
-#sync-section-title::before {
-  content: '\1F4BE  ';
-}
-
-.sync-status {
-  font-weight: 700;
-  color: var(--text-medium);
-  margin-bottom: 8px;
-}
-
-.sync-note {
-  color: var(--text-light);
-  font-size: 0.95rem;
-  margin-bottom: 8px;
-}
-
-/* 경고 문구: 색이 아니라 글자로 알리되, 보이는 사람에게도 눈에 띄게 */
-.sync-warning {
-  color: var(--danger);
-  font-weight: 700;
-  background: rgba(198, 40, 40, 0.08);
-  border: 2px solid rgba(198, 40, 40, 0.35);
-  border-radius: 8px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-}
-
-.sync-btns {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-  flex-wrap: wrap;
-}
-
-/* 마감 알림 섹션 */
-#cal-section-title::before {
-  content: '\23F0  ';
-}
-
-.cal-field {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.cal-check {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-weight: 700;
-  color: var(--text-dark);
-}
-
-.cal-time-input {
-  flex: 0 0 auto;
-  cursor: pointer;
-}
-
-/* .btn 이 display 를 정하므로 hidden 만으로는 숨겨지지 않는다 */
-#btn-cal-connect[hidden] {
-  display: none;
-}
-
 .conflict-detail {
   margin: 0 0 20px 20px;
   padding: 0;
@@ -1005,13 +918,6 @@ input, textarea, select, button {
   color: var(--text-dark);
   margin-bottom: 14px;
   line-height: 1.7;
-}
-
-.modal-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 20px;
 }
 
 /* 모달: 폰 화면에서 잘리지 않도록 */
@@ -1125,27 +1031,18 @@ input, textarea, select, button {
     width: 100%;
   }
 
-  .sync-btns .btn {
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-row .btn {
     width: 100%;
   }
 }
 </style>
 </head>
 <body>
-
-<!-- 상단 건너뛰기 링크 (스크린리더 순차 탐색 / 탭 이동의 첫 항목) -->
-<nav class="skip-links" aria-label="섹션 바로가기">
-  <a class="skip-link" href="#attention-section-title">챙길 것으로 건너뛰기</a>
-  <a class="skip-link" href="#todo-section-title">할 일로 건너뛰기</a>
-  <a class="skip-link" href="#memo-section-title">메모로 건너뛰기</a>
-  <a class="skip-link" href="#event-section-title">일정으로 건너뛰기</a>
-  <a class="skip-link" href="#weekly-goal-title">이번 주 목표로 건너뛰기</a>
-  <a class="skip-link" href="#monthly-goal-title">이번 달 목표로 건너뛰기</a>
-  <a class="skip-link" href="#completed-section-title">해낸 일로 건너뛰기</a>
-  <a class="skip-link" href="#search-section-title">검색으로 건너뛰기</a>
-  <a class="skip-link" href="#sync-section-title">저장 위치로 건너뛰기</a>
-  <a class="skip-link" href="#cal-section-title">마감 알림으로 건너뛰기</a>
-</nav>
 
 <!-- 스크린리더 라이브 알림 영역 -->
 <div id="live-status" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -1162,7 +1059,7 @@ input, textarea, select, button {
       <button class="btn btn-nav" id="btn-next" aria-label="다음 날짜로 이동" title="다음 날짜">다음 &#9654;</button>
       <button class="btn btn-nav" id="btn-today" aria-label="오늘 날짜로 이동">오늘</button>
       <span class="date-display" id="date-display" aria-live="polite" role="heading" aria-level="2"></span>
-      <button class="btn btn-google" id="btn-gcal-connect" aria-label="구글 캘린더 연결">구글 캘린더 연결</button>
+      <button class="btn btn-google" id="btn-gcal-connect" aria-label="구글 연결">구글 연결</button>
       <button class="btn btn-export" id="btn-export" aria-label="엑셀 내보내기" accesskey="e">&#128196; 내보내기</button>
     </nav>
   </header>
@@ -1172,13 +1069,13 @@ input, textarea, select, button {
     <!-- 챙길 것 섹션 (모든 날짜의 기한 지남 / 오늘 마감) -->
     <section class="section" aria-labelledby="attention-section-title">
       <h2 class="section-title" id="attention-section-title" tabindex="-1">챙길 것</h2>
-      <p class="attention-summary" id="attention-summary"></p>
+      <p class="attention-summary" id="attention-summary" hidden></p>
       <ul class="todo-list" id="attention-list" role="list" aria-label="챙길 것 목록"></ul>
     </section>
 
     <!-- 투두리스트 섹션 -->
     <section class="section" aria-labelledby="todo-section-title">
-      <h2 class="section-title" id="todo-section-title" tabindex="-1">할 일</h2>
+      <h2 class="section-title" id="todo-section-title">할 일</h2>
 
       <div class="todo-input-area" role="group" aria-label="새 할 일 입력">
         <label for="todo-input" class="sr-only">새 할 일</label>
@@ -1200,7 +1097,7 @@ input, textarea, select, button {
 
     <!-- 메모 섹션 -->
     <section class="section" aria-labelledby="memo-section-title">
-      <h2 class="section-title" id="memo-section-title" tabindex="-1">메모</h2>
+      <h2 class="section-title" id="memo-section-title">메모</h2>
       <textarea id="memo-textarea" class="memo-textarea"
                 placeholder="메모를 자유롭게 작성하세요..."
                 aria-label="메모 입력. 내용은 자동 저장됩니다."
@@ -1211,7 +1108,7 @@ input, textarea, select, button {
 
     <!-- 일정 섹션 -->
     <section class="section" aria-labelledby="event-section-title">
-      <h2 class="section-title" id="event-section-title" tabindex="-1">일정</h2>
+      <h2 class="section-title" id="event-section-title">일정</h2>
       <div id="event-list" role="list" aria-label="일정 목록"></div>
 
       <div class="event-import-area">
@@ -1227,7 +1124,7 @@ input, textarea, select, button {
 
     <!-- 이번 주 목표 섹션 -->
     <section class="section goal-section" aria-labelledby="weekly-goal-title">
-      <h2 class="section-title" id="weekly-goal-title" tabindex="-1">이번 주 목표</h2>
+      <h2 class="section-title" id="weekly-goal-title">이번 주 목표</h2>
       <p class="goal-period" id="weekly-period"></p>
       <textarea id="weekly-goal-textarea" class="goal-textarea"
                 placeholder="이번 주 목표를 작성하세요..."
@@ -1238,7 +1135,7 @@ input, textarea, select, button {
 
     <!-- 이번 달 목표 섹션 -->
     <section class="section goal-section" aria-labelledby="monthly-goal-title">
-      <h2 class="section-title" id="monthly-goal-title" tabindex="-1">이번 달 목표</h2>
+      <h2 class="section-title" id="monthly-goal-title">이번 달 목표</h2>
       <p class="goal-period" id="monthly-period"></p>
       <textarea id="monthly-goal-textarea" class="goal-textarea"
                 placeholder="이번 달 목표를 작성하세요..."
@@ -1249,87 +1146,13 @@ input, textarea, select, button {
 
     <!-- 해낸 일 섹션 -->
     <section class="section" aria-labelledby="completed-section-title">
-      <h2 class="section-title" id="completed-section-title" tabindex="-1">해낸 일</h2>
+      <h2 class="section-title" id="completed-section-title">해낸 일</h2>
       <div role="region" aria-labelledby="completed-title">
         <h3 class="sub-section-title" id="completed-title">
           해낸 일 <span class="count" id="completed-count" aria-label="완료 개수">0</span>
         </h3>
         <ul class="todo-list" id="completed-list" role="list" aria-label="해낸 일 목록"></ul>
       </div>
-    </section>
-
-    <!-- 검색 섹션 -->
-    <section class="section" aria-labelledby="search-section-title">
-      <h2 class="section-title" id="search-section-title" tabindex="-1">검색</h2>
-
-      <div class="todo-input-area" role="group" aria-label="전체 검색">
-        <label for="search-input" class="input-label">검색어</label>
-        <input type="text" id="search-input" class="todo-input" placeholder="모든 날짜에서 찾을 단어...">
-        <button class="btn btn-primary" id="btn-search">검색</button>
-      </div>
-
-      <h3 class="sub-section-title" id="search-results-title" tabindex="-1">검색 결과</h3>
-      <ul class="todo-list" id="search-results" role="list" aria-label="검색 결과 목록"></ul>
-    </section>
-
-    <!-- 저장 위치 섹션 (구글 드라이브 동기화) -->
-    <section class="section" id="sync-section" aria-labelledby="sync-section-title">
-      <h2 class="section-title" id="sync-section-title" tabindex="-1">저장 위치</h2>
-
-      <p class="sync-status" id="sync-status">저장 위치를 확인하는 중입니다.</p>
-      <p class="sync-warning" id="sync-warning" hidden></p>
-      <p class="sync-note" id="sync-device-note"></p>
-
-      <div class="sync-btns">
-        <button class="btn btn-google" id="btn-drive-connect">구글 드라이브에 연결</button>
-        <button class="btn btn-google" id="btn-drive-reconnect" hidden>구글 다시 연결</button>
-        <button class="btn btn-primary" id="btn-drive-sync" hidden>지금 동기화</button>
-        <button class="btn btn-accent" id="btn-device-name">기기 이름 바꾸기</button>
-        <button class="btn btn-danger" id="btn-drive-disconnect" hidden>구글 드라이브 연결 끊기</button>
-      </div>
-
-      <p class="sync-note">
-        구글 드라이브에는 이 앱이 만든 파일 <strong>업무관리-기록.json</strong> 하나만 저장합니다.
-        이 앱이 만든 파일 외에는 접근하지 않습니다.
-      </p>
-    </section>
-
-    <!-- 마감 알림 섹션 (마감일을 구글 캘린더 일정으로 보낸다) -->
-    <section class="section" id="cal-section" aria-labelledby="cal-section-title">
-      <h2 class="section-title" id="cal-section-title" tabindex="-1">마감 알림</h2>
-
-      <p class="sync-status" id="cal-status">마감 알림 상태를 확인하는 중입니다.</p>
-
-      <div class="cal-field">
-        <label class="cal-check" for="cal-enabled">
-          <input type="checkbox" id="cal-enabled" class="todo-checkbox">
-          <span>마감일을 구글 캘린더에 넣기</span>
-        </label>
-      </div>
-
-      <div class="cal-field">
-        <label for="cal-time" class="input-label">알림 시각 (마감일 당일)</label>
-        <input type="time" id="cal-time" class="todo-input cal-time-input" value="09:00">
-      </div>
-
-      <div class="cal-field">
-        <label class="cal-check" for="cal-day-before">
-          <input type="checkbox" id="cal-day-before" class="todo-checkbox">
-          <span>하루 전에도 알림</span>
-        </label>
-      </div>
-
-      <p class="sync-note" id="cal-pending-note"></p>
-
-      <div class="sync-btns">
-        <button class="btn btn-google" id="btn-cal-connect" hidden>구글 캘린더에 연결</button>
-        <button class="btn btn-primary" id="btn-cal-rebuild">지금 전부 다시 만들기</button>
-      </div>
-
-      <p class="sync-note">
-        이 앱이 만든 일정만 고치거나 지웁니다. 직접 만든 다른 일정은 건드리지 않습니다.
-        할 일을 완료하거나 지우면 그 일정도 함께 지웁니다.
-      </p>
     </section>
 
     <!-- 단축키 안내 -->
@@ -1340,10 +1163,9 @@ input, textarea, select, button {
         <li><kbd>Alt + D</kbd> : 날짜 선택기로 이동</li>
         <li><kbd>Alt + E</kbd> : 엑셀 내보내기</li>
         <li><kbd>Alt + M</kbd> : 메모란으로 이동</li>
-        <li><kbd>Alt + F</kbd> : 검색란으로 이동</li>
-        <li><kbd>Alt + K</kbd> : 챙길 것 섹션으로 이동</li>
+        <li><kbd>Alt + F</kbd> : 검색 창 열기</li>
+        <li><kbd>Alt + K</kbd> : 챙길 것으로 이동</li>
         <li><kbd>Enter</kbd> : 입력란에서 할 일 추가</li>
-        <li><kbd>Enter</kbd> : 검색란에서 검색 실행</li>
       </ul>
     </details>
   </div>
@@ -1379,6 +1201,23 @@ input, textarea, select, button {
   </div>
 </div>
 
+<!-- 검색 대화상자 (Alt+F) -->
+<div class="modal-overlay" id="search-modal" role="dialog" aria-modal="true" aria-labelledby="search-modal-title">
+  <div class="modal search-modal">
+    <h2 class="modal-title" id="search-modal-title">검색</h2>
+    <div class="search-row" role="group" aria-label="모든 날짜에서 검색">
+      <label for="search-input" class="sr-only">검색어</label>
+      <input type="text" id="search-input" class="todo-input" placeholder="모든 날짜에서 찾을 단어..." autocomplete="off">
+      <button class="btn btn-primary" id="btn-search">검색</button>
+    </div>
+    <h3 class="sub-section-title" id="search-results-title" tabindex="-1" hidden>검색 결과</h3>
+    <ul class="todo-list" id="search-results" role="list" aria-label="검색 결과 목록"></ul>
+    <div class="modal-btns">
+      <button class="btn btn-accent" id="btn-search-close">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- 동기화 충돌 안내 모달 (자동 병합하지 않고 사용자에게 묻는다) -->
 <div class="modal-overlay" id="conflict-modal" role="dialog" aria-modal="true"
      aria-labelledby="conflict-title" aria-describedby="conflict-desc">
@@ -1390,39 +1229,6 @@ input, textarea, select, button {
       <button class="btn btn-primary" id="btn-conflict-local">이 기기 것으로 덮어쓰기</button>
       <button class="btn btn-accent" id="btn-conflict-remote">다른 기기 것 가져오기</button>
       <button class="btn btn-accent" id="btn-conflict-later">나중에</button>
-    </div>
-  </div>
-</div>
-
-<!-- 기기 이름 모달 -->
-<div class="modal-overlay" id="device-modal" role="dialog" aria-modal="true"
-     aria-labelledby="device-title" aria-describedby="device-desc">
-  <div class="modal">
-    <h2 class="modal-title" id="device-title">기기 이름 바꾸기</h2>
-    <p class="modal-text" id="device-desc">
-      이 기기를 부를 이름입니다. 다른 기기에서 저장한 기록과 내용이 다를 때 안내 문구에 쓰입니다.
-      예를 들어 사무실 PC, 집 PC, 아이폰처럼 적어주세요.
-    </p>
-    <div class="modal-field">
-      <label for="device-name-input" class="input-label">기기 이름</label>
-      <input type="text" id="device-name-input" class="todo-input" maxlength="20" autocomplete="off">
-    </div>
-    <div class="modal-btns">
-      <button class="btn btn-accent" id="btn-device-cancel">취소</button>
-      <button class="btn btn-primary" id="btn-device-save">저장</button>
-    </div>
-  </div>
-</div>
-
-<!-- 마감 알림 확인 모달 (제목/설명/버튼 글자는 상황에 따라 바뀐다) -->
-<div class="modal-overlay" id="cal-modal" role="dialog" aria-modal="true"
-     aria-labelledby="cal-modal-title" aria-describedby="cal-modal-desc">
-  <div class="modal">
-    <h2 class="modal-title" id="cal-modal-title"></h2>
-    <p class="modal-text" id="cal-modal-desc"></p>
-    <div class="modal-btns">
-      <button class="btn btn-accent" id="btn-cal-modal-no"></button>
-      <button class="btn btn-primary" id="btn-cal-modal-yes"></button>
     </div>
   </div>
 </div>
@@ -1586,9 +1392,18 @@ input, textarea, select, button {
     } catch (e) { /* 설정 저장 실패는 기록 자체에 영향을 주지 않는다 */ }
   }
 
+  // 기기 이름은 자동으로 정한다. 예전에 직접 지어 둔 이름이 있으면 그것을 쓴다.
+  function isAppleMobile() {
+    const ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/.test(ua)) return true;
+    // 아이패드는 데스크톱 사파리처럼 Macintosh 로 보고한다
+    return /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  }
+
   function getDeviceName() {
     const n = getSettings().deviceName;
-    return (typeof n === 'string' && n.trim()) ? n.trim() : '이 기기';
+    if (typeof n === 'string' && n.trim()) return n.trim();
+    return isAppleMobile() ? '아이폰' : 'PC';
   }
 
   // ===== localStorage 쓰기 래퍼 (쓸 때마다 드라이브 업로드를 예약) =====
@@ -1666,10 +1481,9 @@ input, textarea, select, button {
     if (!resp || resp.error || !resp.access_token) {
       googleAccessToken = null;
       googleTokenExpiresAt = 0;
-      markGcalDisconnected();
       if (driveEnabled) driveNeedsReconnect = true;
-      renderSyncStatus();
-      announce('구글 연결에 실패했습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.');
+      renderGoogleButton();
+      announce('구글 연결에 실패했습니다. 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.');
       resolveTokenWaiters(false);
       return;
     }
@@ -1693,16 +1507,15 @@ input, textarea, select, button {
     tokenRequestInFlight = false;
     googleAccessToken = null;
     googleTokenExpiresAt = 0;
-    markGcalDisconnected();
     if (driveEnabled) driveNeedsReconnect = true;
-    renderSyncStatus();
+    renderGoogleButton();
     const type = (err && err.type) || '';
     if (type === 'popup_closed') {
-      announce('구글 연결 창이 닫혔습니다. 다시 연결하려면 구글 드라이브에 연결 버튼을 눌러주세요.');
+      announce('구글 연결 창이 닫혔습니다. 다시 연결하려면 구글 다시 연결 버튼을 눌러주세요.');
     } else if (type === 'popup_failed_to_open') {
-      announce('구글 연결 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제한 뒤 다시 시도해주세요.');
+      announce('구글 연결 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제한 뒤 구글 다시 연결 버튼을 눌러주세요.');
     } else {
-      announce('구글 연결에 실패했습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요.');
+      announce('구글 연결에 실패했습니다. 구글 다시 연결 버튼을 눌러주세요.');
     }
     resolveTokenWaiters(false);
   }
@@ -1722,11 +1535,13 @@ input, textarea, select, button {
   function requestGoogleToken(promptMode, fromUserTap) {
     if (!ensureTokenClient()) {
       announce('구글 로그인 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침해주세요.');
-      if (driveEnabled) { driveNeedsReconnect = true; renderSyncStatus(); }
+      if (driveEnabled) driveNeedsReconnect = true;
+      renderGoogleButton();
       resolveTokenWaiters(false);
       return false;
     }
-    if (tokenRequestInFlight) return true;
+    // 조용한 재발급이 걸려 있어도 사용자가 버튼을 누르면 창을 새로 연다
+    if (tokenRequestInFlight && !fromUserTap) return true;
 
     tokenRequestInFlight = true;
     clearTokenTimer();
@@ -1736,9 +1551,9 @@ input, textarea, select, button {
       if (!tokenRequestInFlight) return;
       tokenRequestInFlight = false;
       if (driveEnabled) driveNeedsReconnect = true;
-      renderSyncStatus();
+      renderGoogleButton();
       if (!fromUserTap) {
-        announce('구글 연결이 자동으로 이어지지 않았습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요.');
+        announce('구글 연결이 자동으로 이어지지 않았습니다. 구글 다시 연결 버튼을 눌러주세요.');
       }
       resolveTokenWaiters(false);
     }, fromUserTap ? 90000 : 12000);
@@ -1748,6 +1563,8 @@ input, textarea, select, button {
     } catch (e) {
       clearTokenTimer();
       tokenRequestInFlight = false;
+      if (driveEnabled) driveNeedsReconnect = true;
+      renderGoogleButton();
       announce('구글 연결 창을 열지 못했습니다. 팝업 차단을 해제한 뒤 다시 시도해주세요.');
       resolveTokenWaiters(false);
       return false;
@@ -1764,30 +1581,99 @@ input, textarea, select, button {
     });
   }
 
+  // 구글 연결 하나로 캘린더(일정 읽기 + 마감일 쓰기)와 드라이브 동기화를 함께 켠다
   function onGoogleConnected(isFirst) {
     // 캘린더 쪽
     if (hasScope(SCOPE_CALENDAR_KEY)) {
-      markGcalConnected();
       fetchGoogleCalendarEvents(!isFirst);
       if (isFirst) announce('구글 계정에 연결되었습니다.');
+      calAuthAnnounced = false;
+      if (!calSyncEnabled) {
+        // 처음 켜질 때는 기존 마감일을 한꺼번에 넣는다. 드라이브 기록을 받아온 뒤에 한다(중복 일정 방지).
+        calSyncEnabled = true;
+        patchSettings({ calSyncEnabled: true });
+        calInitialRebuildPending = true;
+      }
+      scheduleCalendarSync(0);
     }
-    if (hasScope(SCOPE_CALENDAR_KEY)) calAuthAnnounced = false;
-    renderCalendarStatus();
-    if (calSyncEnabled && hasScope(SCOPE_CALENDAR_KEY)) scheduleCalendarSync(0);
 
     // 드라이브 쪽
-    if (driveEnabled && !hasScope('drive.file')) {
+    if (hasScope('drive.file')) {
+      if (!driveEnabled || getSettings().driveEnabled !== true) {
+        driveEnabled = true;
+        patchSettings({ driveEnabled: true });
+      }
+    } else if (driveEnabled) {
       driveEnabled = false;
       patchSettings({ driveEnabled: false });
-      renderSyncStatus();
-      announce('구글 드라이브 권한을 허용하지 않아 드라이브에 저장할 수 없습니다. 지금은 이 브라우저에만 저장됩니다.');
+      renderGoogleButton();
+      announce('구글 드라이브 권한을 허용하지 않아 드라이브에 저장할 수 없습니다. 지금은 이 브라우저에만 저장됩니다. 구글 다시 연결 버튼을 눌러 권한을 허용해주세요.');
+      runInitialCalendarRebuild();
       return;
     }
-    renderSyncStatus();
+    renderGoogleButton();
     if (driveEnabled) {
       const manual = driveManualSyncPending;
       driveManualSyncPending = false;
-      driveSync(manual);
+      driveSync(manual).then(runInitialCalendarRebuild);
+    } else {
+      runInitialCalendarRebuild();
+    }
+  }
+
+  function runInitialCalendarRebuild() {
+    if (!calInitialRebuildPending) return;
+    calInitialRebuildPending = false;
+    calendarRebuildAll(false, true);
+  }
+
+  // ===== 헤더의 구글 연결 버튼 =====
+  // 원본처럼 연결되면 '연결됨', 토큰 재발급이 실패하면 같은 자리에 '구글 다시 연결'
+  function googleFullyConnected() {
+    return tokenAlive() && hasScope(SCOPE_CALENDAR_KEY) && hasScope('drive.file');
+  }
+
+  function renderGoogleButton() {
+    const btn = $('#btn-gcal-connect');
+    if (!btn) return;
+    let text;
+    let label;
+    const connected = googleFullyConnected();
+    if (connected) {
+      text = '연결됨';
+      label = '구글 연결됨';
+    } else if (driveNeedsReconnect || googleEverConnected) {
+      text = label = '구글 다시 연결';
+    } else {
+      text = label = '구글 연결';
+    }
+    if (btn.textContent !== text) btn.textContent = text;
+    btn.setAttribute('aria-label', label);
+    btn.classList.toggle('connected', connected);
+  }
+
+  // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다.
+  // (await 뒤나 setTimeout 안에서 부르면 구글 창이 막힌다)
+  function connectGoogle() {
+    if (googleFullyConnected()) {
+      announce('이미 구글에 연결되어 있습니다. 일정과 기록을 다시 불러옵니다.');
+      fetchGoogleCalendarEvents(false);
+      if (driveEnabled) driveSync(true);
+      return;
+    }
+    const returning = googleEverConnected || driveNeedsReconnect || getSettings().driveEnabled === true;
+    const missingScope = tokenAlive();   // 토큰은 있는데 권한 일부가 빠졌다
+    driveEnabled = true;
+    driveNeedsReconnect = false;
+    driveManualSyncPending = true;
+    patchSettings({ driveEnabled: true });
+    renderGoogleButton();
+    if (returning && !missingScope) {
+      announce('구글에 다시 연결합니다.');
+      requestGoogleToken('', true);
+    } else {
+      announce('구글 계정 선택 창을 엽니다. 구글 캘린더와, 구글 드라이브에서는 이 앱이 만든 파일에만 접근합니다.');
+      requestGoogleToken('consent', true);
     }
   }
 
@@ -1822,7 +1708,6 @@ input, textarea, select, button {
   function markDirty() {
     drivePendingUpload = true;
     patchSettings({ dirty: true });
-    renderSyncStatus();
     if (!driveEnabled) return;
     if (driveUploadTimer) clearTimeout(driveUploadTimer);
     driveUploadTimer = setTimeout(function() {
@@ -2013,7 +1898,7 @@ input, textarea, select, button {
     return driveOverwrite(fileId, text, keepalive).then(function(res) {
       if (res && res.modifiedTime) driveKnownModifiedTime = res.modifiedTime;
       markSynced();
-      renderSyncStatus();
+      renderGoogleButton();
       return true;
     });
   }
@@ -2105,12 +1990,12 @@ input, textarea, select, button {
     return '';
   }
 
-  // manual: 사용자가 '지금 동기화'를 직접 누른 경우
+  // manual: 사용자가 구글 연결 버튼을 직접 누른 경우
   function driveSync(manual, keepalive) {
     if (!driveEnabled) return Promise.resolve();
     if (driveSyncing) { driveSyncQueued = true; return Promise.resolve(); }
     if (!navigator.onLine) {
-      renderSyncStatus();
+      renderGoogleButton();
       if (manual) announce('오프라인입니다. 연결되면 자동으로 올립니다.');
       return Promise.resolve();
     }
@@ -2119,7 +2004,7 @@ input, textarea, select, button {
 
     driveSyncing = true;
     driveSyncQueued = false;
-    renderSyncStatus();
+    renderGoogleButton();
 
     return driveResolveFile()
       .then(function(file) {
@@ -2154,7 +2039,7 @@ input, textarea, select, button {
         driveSyncing = false;
         driveLastError = '';
         driveErrorAnnounced = '';
-        renderSyncStatus();
+        renderGoogleButton();
         if (msg) announce(msg);
         if (driveSyncQueued) {
           driveSyncQueued = false;
@@ -2175,7 +2060,7 @@ input, textarea, select, button {
     if (kind === 'auth') {
       driveNeedsReconnect = true;
       driveLastError = '구글 연결이 끊겼습니다.';
-      msg = '구글 드라이브에 저장하지 못했습니다. 구글 연결이 끊겼습니다. 저장 위치 섹션의 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.';
+      msg = '구글 드라이브에 저장하지 못했습니다. 구글 연결이 끊겼습니다. 구글 다시 연결 버튼을 눌러주세요. 기록은 이 브라우저에 저장되어 있습니다.';
     } else if (!navigator.onLine) {
       driveLastError = '';
       msg = '오프라인이라 구글 드라이브에 올리지 못했습니다. 연결되면 자동으로 올립니다. 기록은 이 브라우저에 저장되어 있습니다.';
@@ -2184,65 +2069,12 @@ input, textarea, select, button {
       msg = '구글 드라이브에 저장하지 못했습니다. ' + driveLastError + ' 기록은 이 브라우저에 저장되어 있습니다.';
     }
 
-    renderSyncStatus();
+    renderGoogleButton();
     // 같은 오류를 반복해서 읽어주지 않는다 (사용자가 직접 누른 경우는 항상 알린다)
     if (manual || driveErrorAnnounced !== msg) {
       driveErrorAnnounced = msg;
       announce(msg);
     }
-  }
-
-  // ===== 저장 위치 상태 표시 =====
-  function renderSyncStatus() {
-    const statusEl = $('#sync-status');
-    if (!statusEl) return;
-
-    const warnEl = $('#sync-warning');
-    const deviceEl = $('#sync-device-note');
-    const connectBtn = $('#btn-drive-connect');
-    const reconnectBtn = $('#btn-drive-reconnect');
-    const syncBtn = $('#btn-drive-sync');
-    const disconnectBtn = $('#btn-drive-disconnect');
-
-    const offline = !navigator.onLine;
-    let msg;
-
-    if (!driveEnabled) {
-      msg = '이 브라우저에만 저장 중입니다. 다른 기기에서는 안 보입니다.';
-      if (offline) msg += ' 지금은 오프라인입니다.';
-      warnEl.hidden = false;
-      warnEl.textContent = '경고: 구글 드라이브에 연결하지 않으면 아이폰이 기록을 지울 수 있습니다. 아이폰은 홈 화면에 추가한 앱을 한동안 쓰지 않으면 저장해 둔 기록을 비웁니다.';
-      connectBtn.hidden = false;
-      reconnectBtn.hidden = true;
-      syncBtn.hidden = true;
-      disconnectBtn.hidden = true;
-    } else {
-      warnEl.hidden = true;
-      warnEl.textContent = '';
-      connectBtn.hidden = true;
-      syncBtn.hidden = false;
-      disconnectBtn.hidden = false;
-      reconnectBtn.hidden = !driveNeedsReconnect;
-
-      if (offline) {
-        msg = '오프라인입니다. 이 브라우저에 저장했고, 연결되면 자동으로 올립니다.';
-      } else if (conflictPending) {
-        msg = '다른 기기의 기록과 내용이 다릅니다. 지금 동기화 버튼을 눌러 어느 쪽을 쓸지 선택해 주세요.';
-      } else if (driveNeedsReconnect) {
-        msg = '구글 연결이 끊겼습니다. 구글 다시 연결 버튼을 눌러주세요. 그동안 기록은 이 브라우저에만 저장됩니다.';
-      } else if (driveSyncing) {
-        msg = '구글 드라이브와 기록을 맞추는 중입니다.';
-      } else if (driveLastError) {
-        msg = '구글 드라이브에 저장하지 못했습니다. ' + driveLastError + ' 기록은 이 브라우저에 저장되어 있습니다.';
-      } else {
-        msg = '구글 드라이브에 저장 중입니다.';
-        if (driveLastSyncAt) msg += ' 마지막 저장 ' + formatWhenKR(new Date(driveLastSyncAt)) + '.';
-        if (drivePendingUpload) msg += ' 아직 올리지 않은 변경이 있습니다.';
-      }
-    }
-
-    statusEl.textContent = msg;
-    if (deviceEl) deviceEl.textContent = '이 기기의 이름: ' + getDeviceName() + '.';
   }
 
   // ===== 모달 공통 (포커스 트랩) =====
@@ -2258,11 +2090,12 @@ input, textarea, select, button {
     if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
   }
 
-  function closeModalEl() {
+  // skipReturn: 닫은 뒤 다른 곳으로 포커스를 옮길 때 (원래 자리로 한 번 갔다가 다시 옮기지 않도록)
+  function closeModalEl(skipReturn) {
     if (!activeModal) return;
     activeModal.classList.remove('active');
     document.removeEventListener('keydown', genericModalKeyHandler);
-    const ret = activeModalReturn;
+    const ret = skipReturn === true ? null : activeModalReturn;
     activeModal = null;
     activeModalReturn = null;
     if (ret && document.contains(ret)) {
@@ -2322,7 +2155,11 @@ input, textarea, select, button {
       ul.appendChild(li);
     }
 
-    openModalEl($('#conflict-modal'), $('#btn-conflict-local'), $('#btn-drive-sync'));
+    // 충돌 안내는 저절로 뜬다. 닫으면 뜨기 전에 있던 자리로 돌아간다.
+    let ret = document.activeElement;
+    if (!ret || ret === document.body || (activeModal && activeModal.contains(ret))) ret = activeModalReturn;
+    if (!ret || ret === document.body) ret = $('#btn-gcal-connect');
+    openModalEl($('#conflict-modal'), $('#btn-conflict-local'), ret);
     announce('기록이 서로 다릅니다. 어느 쪽을 쓸지 선택해 주세요.');
   }
 
@@ -2332,8 +2169,8 @@ input, textarea, select, button {
     if (!c) return;
 
     if (choice === 'later') {
-      announce('나중에 선택합니다. 그때까지 새 기록은 이 브라우저에만 저장됩니다.');
-      renderSyncStatus();
+      announce('나중에 선택합니다. 그때까지 새 기록은 이 브라우저에만 저장됩니다. 앱을 다시 열거나 구글 연결됨 버튼을 누르면 다시 묻습니다.');
+      renderGoogleButton();
       return;
     }
 
@@ -2345,96 +2182,15 @@ input, textarea, select, button {
     conflictPending = null;
     driveKnownModifiedTime = c.modifiedTime;
     drivePendingUpload = true;
-    renderSyncStatus();
+    renderGoogleButton();
 
     driveUpload(collectSyncData(), c.fileId, false)
       .then(function() {
         announce(choice === 'remote'
           ? '다른 기기의 기록을 가져와 구글 드라이브와 맞췄습니다.'
           : '이 기기의 기록으로 구글 드라이브를 덮어썼습니다.');
-        $('#sync-section-title').focus();
       })
       .catch(function(err) { driveFail(err, true); });
-  }
-
-  // ===== 기기 이름 모달 =====
-  function openDeviceModal() {
-    const input = $('#device-name-input');
-    input.value = getDeviceName();
-    openModalEl($('#device-modal'), input, $('#btn-device-name'));
-    announce('이 기기를 부를 이름을 입력하세요.');
-  }
-
-  function saveDeviceName() {
-    const input = $('#device-name-input');
-    const name = input.value.trim().slice(0, 20);
-    if (!name) {
-      announce('기기 이름을 입력해주세요.');
-      input.focus();
-      return;
-    }
-    patchSettings({ deviceName: name });
-    closeModalEl();
-    renderSyncStatus();
-    announce('기기 이름을 ' + name + '으로 바꿨습니다.');
-  }
-
-  // ===== 연결 / 해제 / 수동 동기화 =====
-  // 아래 세 함수는 반드시 버튼 클릭 핸들러 안에서 바로 불러야 한다.
-  // await 뒤나 setTimeout 안에서 부르면 아이폰 사파리가 구글 창을 막는다.
-  function connectDrive() {
-    driveEnabled = true;
-    driveNeedsReconnect = false;
-    patchSettings({ driveEnabled: true });
-    renderSyncStatus();
-
-    if (tokenAlive() && hasScope('drive.file')) {
-      announce('구글 드라이브와 동기화를 시작합니다.');
-      driveSync(true);
-      return;
-    }
-    driveManualSyncPending = true;
-    announce('구글 계정 선택 창을 엽니다. 이 앱이 만든 파일 외에는 접근하지 않습니다.');
-    requestGoogleToken('consent', true);
-  }
-
-  function reconnectGoogle() {
-    driveNeedsReconnect = false;
-    renderSyncStatus();
-    driveManualSyncPending = true;
-    announce('구글에 다시 연결합니다.');
-    requestGoogleToken('', true);
-  }
-
-  function manualSync() {
-    if (!driveEnabled) {
-      announce('먼저 구글 드라이브에 연결해주세요.');
-      $('#btn-drive-connect').focus();
-      return;
-    }
-    if (!navigator.onLine) {
-      announce('오프라인입니다. 연결되면 자동으로 올립니다.');
-      return;
-    }
-    if (!tokenAlive()) {
-      driveManualSyncPending = true;
-      announce('구글에 다시 연결한 뒤 동기화합니다.');
-      requestGoogleToken('', true);
-      return;
-    }
-    announce('구글 드라이브와 동기화를 시작합니다.');
-    driveSync(true);
-  }
-
-  function disconnectDrive() {
-    driveEnabled = false;
-    conflictPending = null;
-    driveNeedsReconnect = false;
-    if (driveUploadTimer) { clearTimeout(driveUploadTimer); driveUploadTimer = null; }
-    patchSettings({ driveEnabled: false });
-    renderSyncStatus();
-    announce('구글 드라이브 연결을 끊었습니다. 지금부터는 이 브라우저에만 저장됩니다. 드라이브에 저장된 파일은 그대로 남아 있습니다.');
-    $('#btn-drive-connect').focus();
   }
 
   // ===== 시작 시 동기화 =====
@@ -2449,12 +2205,13 @@ input, textarea, select, button {
 
   function initDriveSync() {
     const s = getSettings();
-    driveEnabled = s.driveEnabled === true;
+    // 예전 화면에서 캘린더만 켜 둔 경우도 구글에 연결했던 것으로 본다 (구글 연결 = 캘린더 + 드라이브)
+    driveEnabled = s.driveEnabled === true || s.calSyncEnabled === true;
     driveFileId = (typeof s.driveFileId === 'string' && s.driveFileId) ? s.driveFileId : null;
     driveKnownModifiedTime = (typeof s.driveModifiedTime === 'string') ? s.driveModifiedTime : null;
     drivePendingUpload = s.dirty === true;
     driveLastSyncAt = (typeof s.lastSyncAt === 'number') ? s.lastSyncAt : 0;
-    renderSyncStatus();
+    renderGoogleButton();
 
     if (!driveEnabled) {
       finishStartup('');
@@ -2469,7 +2226,7 @@ input, textarea, select, button {
     waitForGoogleLib(function(ok) {
       if (!ok) {
         driveNeedsReconnect = true;
-        renderSyncStatus();
+        renderGoogleButton();
         finishStartup('구글 로그인 스크립트를 불러오지 못했습니다. 지금은 이 브라우저의 기록을 보여줍니다.');
         return;
       }
@@ -2479,7 +2236,7 @@ input, textarea, select, button {
       ensureToken().then(function(gotToken) {
         if (!gotToken) {
           driveNeedsReconnect = true;
-          renderSyncStatus();
+          renderGoogleButton();
         }
       });
     });
@@ -2487,7 +2244,7 @@ input, textarea, select, button {
 
   function initSyncEvents() {
     window.addEventListener('online', function() {
-      renderSyncStatus();
+      renderGoogleButton();
       if (driveEnabled && drivePendingUpload) {
         announce('다시 연결되었습니다. 구글 드라이브에 올립니다.');
         driveSync(false);
@@ -2498,7 +2255,7 @@ input, textarea, select, button {
     });
 
     window.addEventListener('offline', function() {
-      renderSyncStatus();
+      renderGoogleButton();
       announce('오프라인입니다. 기록은 이 브라우저에 저장되고, 연결되면 자동으로 올립니다.');
     });
 
@@ -2943,11 +2700,19 @@ input, textarea, select, button {
     const all = items.overdue.concat(items.dueToday);
     ul.innerHTML = '';
 
+    // 비어 있으면 헤딩과 한 줄만 (원본의 '할 일이 없습니다.'와 같은 모양)
     if (all.length === 0) {
-      summary.textContent = '챙길 것이 없습니다.';
+      summary.textContent = '';
+      summary.hidden = true;
+      const li = document.createElement('li');
+      li.className = 'no-events';
+      li.setAttribute('role', 'listitem');
+      li.textContent = '챙길 것이 없습니다.';
+      ul.appendChild(li);
       return;
     }
     summary.textContent = attentionSummaryText(items);
+    summary.hidden = false;
 
     all.forEach(entry => {
       const todo = entry.todo;
@@ -2981,7 +2746,9 @@ input, textarea, select, button {
       goSr.className = 'sr-only';
       goSr.textContent = `: ${formatShortDateKR(entry.date)}, ${todo.text}`;
       goBtn.appendChild(goSr);
-      goBtn.addEventListener('click', () => setDate(entry.date));
+      goBtn.addEventListener('click', () => goToDateAndFocus(entry.date, function() {
+        return $(`#pending-list [data-id="${CSS.escape(todo.id)}"] .todo-checkbox`);
+      }));
 
       li.appendChild(span);
       li.appendChild(createDueSpan(entry.due));
@@ -2990,6 +2757,13 @@ input, textarea, select, button {
       li.appendChild(goBtn);
       ul.appendChild(li);
     });
+  }
+
+  // 날짜를 옮긴 뒤, 그 날짜 화면에서 해당 항목으로 포커스를 옮긴다 (없으면 할 일 입력란)
+  function goToDateAndFocus(dateStr, findTarget) {
+    setDate(dateStr);
+    const target = findTarget ? findTarget() : null;
+    (target || $('#todo-input')).focus();
   }
 
   // 목록이 다시 그려진 뒤 포커스 복구: 같은 자리 → 마지막 항목 → 섹션 헤딩
@@ -3083,7 +2857,7 @@ input, textarea, select, button {
         getTodos(todoMatch[1]).forEach(todo => {
           if (!todo || typeof todo.text !== 'string') return;
           if (todo.text.toLowerCase().indexOf(q) === -1) return;
-          results.push({ date: todoMatch[1], kind: '할 일', text: todo.text });
+          results.push({ date: todoMatch[1], kind: todo.completed ? '해낸 일' : '할 일', text: todo.text, id: todo.id, completed: !!todo.completed });
         });
         continue;
       }
@@ -3124,6 +2898,7 @@ input, textarea, select, button {
     const ul = $('#search-results');
     const title = $('#search-results-title');
     ul.innerHTML = '';
+    title.hidden = false;
 
     if (results.length === 0) {
       title.textContent = '검색 결과 없음';
@@ -3159,13 +2934,38 @@ input, textarea, select, button {
       goSr.className = 'sr-only';
       goSr.textContent = `: ${formatDateKR(item.date)}`;
       goBtn.appendChild(goSr);
-      goBtn.addEventListener('click', () => setDate(item.date));
+      goBtn.addEventListener('click', () => {
+        closeModalEl(true);
+        goToDateAndFocus(item.date, () => searchTargetFor(item));
+      });
 
       li.appendChild(meta);
       li.appendChild(body);
       li.appendChild(goBtn);
       ul.appendChild(li);
     });
+  }
+
+  // 검색 결과로 이동했을 때 포커스를 둘 곳
+  function searchTargetFor(item) {
+    if (item.id) {
+      const list = item.completed ? '#completed-list' : '#pending-list';
+      return $(`${list} [data-id="${CSS.escape(item.id)}"] .todo-checkbox`);
+    }
+    if (item.kind === '메모') return $('#memo-textarea');
+    if (item.kind === '이번 주 목표') return $('#weekly-goal-textarea');
+    if (item.kind === '이번 달 목표') return $('#monthly-goal-textarea');
+    return null;
+  }
+
+  // Alt+F 검색 대화상자
+  function openSearchModal() {
+    const overlay = $('#search-modal');
+    const input = $('#search-input');
+    if (activeModal === overlay) { input.focus(); input.select(); return; }
+    const ret = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    openModalEl(overlay, input, ret);
+    input.select();
   }
 
   function doSearch() {
@@ -3524,33 +3324,6 @@ input, textarea, select, button {
 
   // ===== 구글 캘린더 연동 =====
   // 로그인은 위의 구글 로그인 코드(토큰 클라이언트 하나)를 그대로 쓴다.
-  function markGcalConnected() {
-    const btn = $('#btn-gcal-connect');
-    if (!btn) return;
-    btn.textContent = '연결됨';
-    btn.classList.add('connected');
-    btn.setAttribute('aria-label', '구글 캘린더 연결됨');
-  }
-
-  function markGcalDisconnected() {
-    const btn = $('#btn-gcal-connect');
-    if (!btn) return;
-    btn.textContent = '구글 캘린더 연결';
-    btn.classList.remove('connected');
-    btn.setAttribute('aria-label', '구글 캘린더 연결');
-  }
-
-  // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다
-  function connectGoogleCalendar() {
-    if (tokenAlive() && hasScope(SCOPE_CALENDAR_KEY)) {
-      announce('이미 구글에 연결되어 있습니다. 일정을 다시 불러옵니다.');
-      fetchGoogleCalendarEvents(false);
-      return;
-    }
-    announce('구글 계정 선택 창을 엽니다.');
-    requestGoogleToken('consent', true);
-  }
-
   // quiet: 토큰 자동 갱신처럼 사용자가 시키지 않은 조회는 결과를 읽어주지 않는다
   function fetchGoogleCalendarEvents(quiet) {
     if (!googleAccessToken) return;
@@ -3574,10 +3347,14 @@ input, textarea, select, button {
       if (response.status === 401) {
         googleAccessToken = null;
         googleTokenExpiresAt = 0;
-        markGcalDisconnected();
+        renderGoogleButton();
         announce('구글 캘린더 인증이 만료되었습니다. 다시 연결을 시도합니다.');
         ensureToken().then(function(ok) {
-          if (!ok) announce('구글 캘린더에 다시 연결하지 못했습니다. 구글 캘린더 연결 버튼을 눌러주세요.');
+          if (!ok) {
+            if (driveEnabled) driveNeedsReconnect = true;
+            renderGoogleButton();
+            announce('구글 캘린더에 다시 연결하지 못했습니다. 구글 다시 연결 버튼을 눌러주세요.');
+          }
         });
         return null;
       }
@@ -3635,8 +3412,7 @@ input, textarea, select, button {
   let calTimer = null;
   let calRunning = false;
   let calAuthAnnounced = false;
-  let calModalYes = null;
-  let calModalNo = null;
+  let calInitialRebuildPending = false;   // 구글 연결로 처음 켜졌을 때 기존 마감일을 한꺼번에 넣는다
 
   function calKey(dateStr, id) { return dateStr + '|' + id; }
 
@@ -3659,14 +3435,6 @@ input, textarea, select, button {
     const mi = parseInt(m[2], 10);
     if (isNaN(h) || isNaN(mi) || h > 23 || mi > 59) return null;
     return { h: h, m: mi };
-  }
-
-  function formatTimeKR(value) {
-    const t = parseHm(value) || parseHm(CAL_DEFAULT_TIME);
-    const ampm = t.h < 12 ? '오전' : '오후';
-    let h12 = t.h % 12;
-    if (h12 === 0) h12 = 12;
-    return ampm + ' ' + h12 + '시' + (t.m ? ' ' + t.m + '분' : '');
   }
 
   // 로컬(한국) 기준으로 문자열을 조립한다. toISOString 은 UTC 로 밀리므로 쓰지 않는다.
@@ -3830,7 +3598,7 @@ input, textarea, select, button {
     if (!getDue(todo) && !eventId) return;      // 마감일 없는 할 일은 아무것도 만들지 않는다
     calEnqueue(dateStr, todo.id, eventId, false);
     scheduleCalendarSync();
-    renderCalendarStatus();
+    renderGoogleButton();
   }
 
   // 할 일이 사라지기 직전에 부른다. 일정 번호를 여기서 챙겨 둬야 지울 수 있다.
@@ -3840,7 +3608,7 @@ input, textarea, select, button {
     if (!eventId) return;
     calEnqueue(dateStr, todo.id, eventId, false);
     scheduleCalendarSync();
-    renderCalendarStatus();
+    renderGoogleButton();
   }
 
   // 드라이브에서 다른 기기의 기록을 받아온 뒤에 부른다.
@@ -3858,7 +3626,7 @@ input, textarea, select, button {
         n++;
       });
     });
-    if (n) { renderCalendarStatus(); scheduleCalendarSync(); }
+    if (n) { renderGoogleButton(); scheduleCalendarSync(); }
   }
 
   function calSetEventId(dateStr, id, eventId) {
@@ -3938,8 +3706,8 @@ input, textarea, select, button {
 
   function runCalendarQueue() {
     if (calRunning) return;
-    if (!calSyncEnabled || !calPending.length) { renderCalendarStatus(); return; }
-    if (!navigator.onLine) { renderCalendarStatus(); return; }   // 오프라인이면 시도하지 않는다
+    if (!calSyncEnabled || !calPending.length) { renderGoogleButton(); return; }
+    if (!navigator.onLine) { renderGoogleButton(); return; }   // 오프라인이면 시도하지 않는다
 
     calRunning = true;
     const batch = calPending.slice(0, CAL_BATCH_MAX);
@@ -3965,7 +3733,7 @@ input, textarea, select, button {
     step(0).then(function() {
       calRunning = false;
       saveCalState();
-      renderCalendarStatus();
+      renderGoogleButton();
 
       const done = counts.created + counts.updated + counts.deleted;
       const rest = calPending.length;
@@ -3973,7 +3741,7 @@ input, textarea, select, button {
       if (authFailed) {
         if (!calAuthAnnounced) {
           calAuthAnnounced = true;
-          announce('구글 캘린더 권한이 없어 마감 일정을 반영하지 못했습니다. 마감 알림 섹션의 구글 캘린더에 연결 버튼을 눌러주세요. 할 일은 저장되어 있습니다.');
+          announce('구글 캘린더 권한이 없어 마감 일정을 반영하지 못했습니다. 구글 다시 연결 버튼을 눌러주세요. 할 일은 저장되어 있습니다.');
         }
         return;
       }
@@ -3995,89 +3763,22 @@ input, textarea, select, button {
   }
 
   // ===== 마감 알림 설정 =====
+  // 화면에는 설정이 없다. 구글에 연결하면 켜지고, 알림은 마감일 당일 오전 9시, 하루 전 알림은 끈다.
   function loadCalSettings() {
     const s = getSettings();
     calSyncEnabled = s.calSyncEnabled === true;
-    calReminderTime = parseHm(s.calReminderTime) ? s.calReminderTime : CAL_DEFAULT_TIME;
-    calDayBefore = s.calDayBefore === true;
+    calReminderTime = CAL_DEFAULT_TIME;
+    calDayBefore = false;
     calPending = Array.isArray(s.calPending)
       ? s.calPending.filter(function(e) { return e && typeof e.d === 'string' && typeof e.i === 'string'; })
       : [];
     calSigs = (s.calSigs && typeof s.calSigs === 'object' && !Array.isArray(s.calSigs)) ? s.calSigs : {};
   }
 
-  function renderCalendarStatus() {
-    const el = $('#cal-status');
-    if (!el) return;
-    const connectBtn = $('#btn-cal-connect');
-    const noteEl = $('#cal-pending-note');
-    let msg;
-
-    if (!calSyncEnabled) {
-      msg = '꺼져 있습니다.';
-      if (connectBtn) connectBtn.hidden = true;
-    } else if (calendarWritable()) {
-      msg = '구글 캘린더에 넣고 있습니다. 마감일 당일 ' + formatTimeKR(calReminderTime) + '에 알립니다.';
-      if (calDayBefore) msg += ' 하루 전 같은 시각에도 알립니다.';
-      if (connectBtn) connectBtn.hidden = true;
-    } else {
-      msg = '구글 캘린더 권한이 없습니다. 아래 버튼을 눌러 연결하세요.';
-      if (connectBtn) connectBtn.hidden = false;
-    }
-
-    el.textContent = msg;
-    if (noteEl) {
-      noteEl.textContent = (calSyncEnabled && calPending.length)
-        ? '캘린더 반영 대기 ' + calPending.length + '건이 있습니다.'
-        : '';
-    }
-  }
-
-  function openCalModal(opt) {
-    const overlay = $('#cal-modal');
-    if (!overlay) return;
-    $('#cal-modal-title').textContent = opt.title;
-    $('#cal-modal-desc').textContent = opt.desc;
-
-    const yes = $('#btn-cal-modal-yes');
-    const no = $('#btn-cal-modal-no');
-    yes.textContent = opt.yesLabel;
-    no.textContent = opt.noLabel;
-    yes.className = 'btn ' + (opt.danger ? 'btn-danger' : 'btn-primary');
-
-    calModalYes = opt.onYes || null;
-    calModalNo = opt.onNo || null;
-
-    openModalEl(overlay, opt.danger ? no : yes, opt.returnEl || null);
-    announce(opt.title + ' ' + opt.desc + ' ' + opt.yesLabel + ', 또는 ' + opt.noLabel + ' 중에서 선택하세요.');
-  }
-
-  function closeCalModal(choice) {
-    const yesFn = calModalYes;
-    const noFn = calModalNo;
-    calModalYes = null;
-    calModalNo = null;
-    closeModalEl();
-    if (choice === 'yes' && yesFn) yesFn();
-    else if (choice === 'no' && noFn) noFn();
-  }
-
-  function countCalendarLinked() {
-    let n = 0;
-    getAllTodoDates().forEach(function(dateStr) {
-      getTodos(dateStr).forEach(function(todo) {
-        if (calEventIdOf(todo)) n++;
-      });
-    });
-    return n;
-  }
-
   // 기존 마감일을 캘린더에 한꺼번에 반영한다. force 면 이미 넣은 일정도 다시 덮어쓴다.
-  function calendarRebuildAll(force) {
-    if (!calSyncEnabled) {
-      announce('마감일을 구글 캘린더에 넣기가 꺼져 있습니다. 먼저 체크박스를 켜주세요.');
-      return;
-    }
+  // quiet: 구글 연결 직후 자동으로 부를 때. 넣을 것이 없으면 아무 말도 하지 않는다.
+  function calendarRebuildAll(force, quiet) {
+    if (!calSyncEnabled) return;
     let n = 0;
     getAllTodoDates().forEach(function(dateStr) {
       getTodos(dateStr).forEach(function(todo) {
@@ -4092,11 +3793,9 @@ input, textarea, select, button {
     });
 
     if (!n) {
-      announce('구글 캘린더에 넣을 마감일이 없습니다.');
-      renderCalendarStatus();
+      if (!quiet) announce('구글 캘린더에 넣을 마감일이 없습니다.');
       return;
     }
-    renderCalendarStatus();
     if (!navigator.onLine) {
       announce('오프라인입니다. 마감일 ' + n + '건을 대기 목록에 넣었습니다. 연결되면 반영합니다.');
       return;
@@ -4105,156 +3804,8 @@ input, textarea, select, button {
     scheduleCalendarSync(0);
   }
 
-  // 이 앱이 만든 일정을 전부 지운다 (설정을 끌 때만 쓴다)
-  function purgeAllCalendarEvents() {
-    const list = [];
-    getAllTodoDates().forEach(function(dateStr) {
-      getTodos(dateStr).forEach(function(todo) {
-        const eventId = calEventIdOf(todo);
-        if (eventId) list.push({ d: dateStr, i: todo.id, e: eventId });
-      });
-    });
-
-    if (!list.length) {
-      announce('구글 캘린더에서 지울 일정이 없습니다.');
-      return;
-    }
-    if (!navigator.onLine) {
-      announce('오프라인입니다. 연결된 뒤에 다시 시도해주세요.');
-      return;
-    }
-    announce('구글 캘린더에서 이 앱이 만든 일정 ' + list.length + '건을 지웁니다.');
-    calPurgeStep(list, 0, 0, 0);
-  }
-
-  function calPurgeStep(list, index, removed, failed) {
-    if (index >= list.length) {
-      calPending = [];
-      calSigs = {};
-      saveCalState();
-      renderCalendarStatus();
-      let msg = '구글 캘린더에서 일정 ' + removed + '건을 지웠습니다.';
-      if (failed) msg += ' ' + failed + '건은 지우지 못했습니다.';
-      announce(msg);
-      return;
-    }
-    const item = list[index];
-    calDeleteEvent(item.e)
-      .then(function(r) {
-        calSetEventId(item.d, item.i, null);
-        return { removed: removed + (r === 'deleted' ? 1 : 0), failed: failed };
-      })
-      .catch(function() {
-        return { removed: removed, failed: failed + 1 };
-      })
-      .then(function(next) {
-        if (index > 0 && index % 20 === 0) {
-          announce('지우는 중입니다. ' + index + '건까지 처리했습니다.');
-        }
-        calPurgeStep(list, index + 1, next.removed, next.failed);
-      });
-  }
-
-  // 알림 시각 / 하루 전 설정을 바꿨을 때 기존 일정에도 반영할지 묻는다
-  function askCalRetroApply(returnEl) {
-    if (!calSyncEnabled) return;
-    const count = countCalendarLinked();
-    if (!count) return;
-    openCalModal({
-      title: '기존 일정에도 적용할까요?',
-      desc: '구글 캘린더에 이미 넣어 둔 마감 일정이 ' + count + '건 있습니다. 바꾼 설정을 기존 일정에도 적용할 수 있습니다. 건수가 많으면 시간이 걸립니다.',
-      yesLabel: '기존 것도 전부 바꾸기',
-      noLabel: '지금 것부터 적용',
-      returnEl: returnEl,
-      onYes: function() { calendarRebuildAll(true); },
-      onNo: function() { announce('지금부터 만드는 일정에만 적용합니다.'); }
-    });
-  }
-
-  function onCalEnabledChange() {
-    const cb = $('#cal-enabled');
-    const on = !!(cb && cb.checked);
-    calSyncEnabled = on;
-    patchSettings({ calSyncEnabled: on });
-    renderCalendarStatus();
-
-    if (on) {
-      announce('마감일을 구글 캘린더에 넣습니다.');
-      if (!calendarWritable()) {
-        announce('구글 캘린더 권한이 필요합니다. 구글 캘린더에 연결 버튼을 눌러주세요.');
-        return;
-      }
-      calendarRebuildAll(false);
-      return;
-    }
-
-    announce('마감일을 구글 캘린더에 넣지 않습니다. 앞으로 새 일정은 만들지 않습니다.');
-    if (!countCalendarLinked()) return;
-    openCalModal({
-      title: '이미 만든 일정도 지울까요?',
-      desc: '지금까지 이 앱이 구글 캘린더에 넣은 마감 일정이 남아 있습니다. 이 앱이 만든 일정만 지웁니다. 직접 만든 다른 일정은 건드리지 않습니다.',
-      yesLabel: '전부 지우기',
-      noLabel: '그대로 두기',
-      danger: true,
-      returnEl: cb,
-      onYes: purgeAllCalendarEvents,
-      onNo: function() { announce('구글 캘린더에 있는 일정을 그대로 둡니다.'); }
-    });
-  }
-
-  function onCalTimeChange() {
-    const input = $('#cal-time');
-    const value = input ? input.value : '';
-    if (!parseHm(value)) {
-      announce('알림 시각을 읽지 못했습니다. 오전 9시로 되돌립니다.');
-      calReminderTime = CAL_DEFAULT_TIME;
-      if (input) input.value = CAL_DEFAULT_TIME;
-      patchSettings({ calReminderTime: CAL_DEFAULT_TIME });
-      renderCalendarStatus();
-      return;
-    }
-    if (value === calReminderTime) return;
-    calReminderTime = value;
-    patchSettings({ calReminderTime: value });
-    renderCalendarStatus();
-    announce('알림 시각을 ' + formatTimeKR(value) + '으로 바꿨습니다.');
-    askCalRetroApply(input);
-  }
-
-  function onCalDayBeforeChange() {
-    const cb = $('#cal-day-before');
-    const on = !!(cb && cb.checked);
-    if (on === calDayBefore) return;
-    calDayBefore = on;
-    patchSettings({ calDayBefore: on });
-    renderCalendarStatus();
-    announce(on ? '하루 전에도 알립니다.' : '하루 전 알림을 끕니다.');
-    askCalRetroApply(cb);
-  }
-
-  // 사용자 탭 핸들러 안에서 바로 호출해야 아이폰 사파리에서 창이 막히지 않는다
-  function connectCalendarWrite() {
-    if (calendarWritable()) {
-      announce('이미 구글 캘린더에 연결되어 있습니다.');
-      renderCalendarStatus();
-      if (calSyncEnabled) scheduleCalendarSync(0);
-      return;
-    }
-    announce('구글 계정 선택 창을 엽니다. 캘린더 권한을 허용해주세요.');
-    requestGoogleToken('consent', true);
-  }
-
   function initCalendarSync() {
     loadCalSettings();
-
-    const cb = $('#cal-enabled');
-    if (cb) cb.checked = calSyncEnabled;
-    const timeInput = $('#cal-time');
-    if (timeInput) timeInput.value = calReminderTime;
-    const dayBefore = $('#cal-day-before');
-    if (dayBefore) dayBefore.checked = calDayBefore;
-
-    renderCalendarStatus();
 
     window.addEventListener('online', function() {
       if (calSyncEnabled && calPending.length) scheduleCalendarSync(2000);
@@ -4293,7 +3844,7 @@ input, textarea, select, button {
       }
     });
 
-    // 검색
+    // 검색 대화상자 (Alt+F)
     $('#btn-search').addEventListener('click', doSearch);
     $('#search-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -4301,31 +3852,9 @@ input, textarea, select, button {
         doSearch();
       }
     });
-    // 검색 전 초기 안내 (섹션 위치를 항상 유지)
-    (function() {
-      const li = document.createElement('li');
-      li.className = 'no-events';
-      li.setAttribute('role', 'listitem');
-      li.textContent = '검색어를 입력하고 검색 버튼을 눌러주세요.';
-      $('#search-results').appendChild(li);
-    })();
-
-    // 저장 위치 (구글 드라이브)
-    // 아래 버튼들은 핸들러 안에서 바로 구글 토큰을 요청한다 (아이폰 사파리 팝업 차단 회피)
-    $('#btn-drive-connect').addEventListener('click', connectDrive);
-    $('#btn-drive-reconnect').addEventListener('click', reconnectGoogle);
-    $('#btn-drive-sync').addEventListener('click', manualSync);
-    $('#btn-drive-disconnect').addEventListener('click', disconnectDrive);
-    $('#btn-device-name').addEventListener('click', openDeviceModal);
-
-    // 기기 이름 모달
-    $('#btn-device-save').addEventListener('click', saveDeviceName);
-    $('#btn-device-cancel').addEventListener('click', function() {
-      closeModalEl();
-      announce('기기 이름을 바꾸지 않았습니다.');
-    });
-    $('#device-name-input').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') { e.preventDefault(); saveDeviceName(); }
+    $('#btn-search-close').addEventListener('click', function() { closeModalEl(); });
+    $('#search-modal').addEventListener('click', function(e) {
+      if (e.target === $('#search-modal')) closeModalEl();
     });
 
     // 충돌 안내 모달
@@ -4333,14 +3862,7 @@ input, textarea, select, button {
     $('#btn-conflict-remote').addEventListener('click', function() { resolveConflict('remote'); });
     $('#btn-conflict-later').addEventListener('click', function() { resolveConflict('later'); });
 
-    // 마감 알림 (마감일 → 구글 캘린더)
-    $('#cal-enabled').addEventListener('change', onCalEnabledChange);
-    $('#cal-time').addEventListener('change', onCalTimeChange);
-    $('#cal-day-before').addEventListener('change', onCalDayBeforeChange);
-    $('#btn-cal-connect').addEventListener('click', connectCalendarWrite);
-    $('#btn-cal-rebuild').addEventListener('click', function() { calendarRebuildAll(true); });
-    $('#btn-cal-modal-yes').addEventListener('click', function() { closeCalModal('yes'); });
-    $('#btn-cal-modal-no').addEventListener('click', function() { closeCalModal('no'); });
+    // 마감일 → 구글 캘린더 (화면 설정 없이 뒤에서 돈다)
     initCalendarSync();
 
     initSyncEvents();
@@ -4395,14 +3917,26 @@ input, textarea, select, button {
       monthlyTextarea.addEventListener('input', debouncedMonthlySave);
     }
 
-    // 구글 캘린더 연결 (드라이브와 같은 로그인 창을 쓴다)
-    $('#btn-gcal-connect').addEventListener('click', connectGoogleCalendar);
+    // 구글 연결 (캘린더와 드라이브 권한을 한 번에 받는다)
+    // 핸들러 안에서 바로 구글 토큰을 요청한다 (아이폰 사파리 팝업 차단 회피)
+    $('#btn-gcal-connect').addEventListener('click', connectGoogle);
 
     // 전역 단축키 (accesskey 보완)
     document.addEventListener('keydown', (e) => {
       // Alt 조합은 accesskey로 처리되므로 여기서는 추가 보완
       if (e.altKey && !e.ctrlKey && !e.metaKey) {
-        switch (e.key.toLowerCase()) {
+        // 한글 입력 상태에서는 e.key 가 한글 자모로 올 수 있어 물리 키(e.code)로 보완한다
+        let key = (e.key || '').toLowerCase();
+        if (!/^[a-z]$/.test(key) && e.code && /^Key[A-Z]$/.test(e.code)) key = e.code.slice(3).toLowerCase();
+        // 검색 대화상자나 충돌 안내가 떠 있으면 대화상자 밖으로 포커스를 빼지 않는다
+        if (activeModal) {
+          if (key === 'f' && activeModal === $('#search-modal')) {
+            e.preventDefault();
+            openSearchModal();
+          }
+          return;
+        }
+        switch (key) {
           case 't':
             e.preventDefault();
             $('#todo-input').focus();
@@ -4416,9 +3950,9 @@ input, textarea, select, button {
             openExportModal();
             break;
           case 'f':
+            if ($('#export-modal').classList.contains('active')) break;
             e.preventDefault();
-            $('#search-input').focus();
-            announce('검색란입니다. 찾을 단어를 입력하고 엔터를 누르세요.');
+            openSearchModal();
             break;
           case 'k':
             e.preventDefault();
